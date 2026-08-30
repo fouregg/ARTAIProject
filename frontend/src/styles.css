@@ -85,7 +85,7 @@ h2,
 .page {
   max-width: 900px;
   margin: 0 auto;
-  padding: 24px 20px 96px;
+  padding: 24px 20px 150px;
 }
 
 .page__header {
@@ -118,7 +118,7 @@ h2,
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 96px 20px 96px;
+  padding: 96px 20px 150px;
 }
 
 .stage__form {
@@ -207,20 +207,20 @@ h2,
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 28px;
-  padding: 14px 20px;
+  gap: 44px;
+  padding: 22px 20px;
   background: linear-gradient(to top, var(--cream) 60%, rgba(243, 236, 221, 0));
   pointer-events: none;
 }
 
 .brandbar__mark {
-  height: 40px;
+  height: 76px;
   width: auto;
-  opacity: 0.85;
+  opacity: 0.9;
 }
 
 .brandbar__mark--wide {
-  height: 30px;
+  height: 54px;
 }
 
 @media (max-height: 720px) {

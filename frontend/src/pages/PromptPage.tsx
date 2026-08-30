@@ -11,9 +11,10 @@ import ResultModal from "../components/ResultModal";
 import { useI18n } from "../i18n/LanguageContext";
 import { REG } from "../i18n/registration";
 
-// Формат и качество больше не выбираются: квадрат и medium для всех.
+// Формат и качество больше не выбираются: квадрат и low для всех.
+// low заметно быстрее medium — на киоске очередь важнее детализации.
 const ASPECT_RATIO = "1:1";
-const QUALITY = "medium";
+const QUALITY = "low";
 
 export default function PromptPage() {
   const { t } = useI18n();
