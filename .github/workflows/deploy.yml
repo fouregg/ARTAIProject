@@ -1,0 +1,107 @@
+name: Deploy
+
+# Каждый push в main собирает образ и выкатывает его на сервер.
+# Ручной запуск оставлен на случай отката или передеплоя без изменений в коде.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  # Два деплоя одновременно на один сервер устроят гонку — новый ждёт предыдущий.
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Сборка образа
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      image: ${{ steps.meta.outputs.image }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Имя образа в нижнем регистре
+        id: meta
+        run: |
+          repo="${GITHUB_REPOSITORY,,}"
+          echo "image=ghcr.io/${repo}:${GITHUB_SHA::12}" >> "$GITHUB_OUTPUT"
+          echo "latest=ghcr.io/${repo}:latest" >> "$GITHUB_OUTPUT"
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Сборка и публикация
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ steps.meta.outputs.image }}
+            ${{ steps.meta.outputs.latest }}
+          # Кеш слоёв между запусками: пересборка идёт только с изменившегося шага.
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy:
+    name: Выкатка на сервер
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - name: Ключ и known_hosts
+        run: |
+          install -d -m 700 ~/.ssh
+          install -m 600 /dev/stdin ~/.ssh/deploy_key <<< "${{ secrets.DEPLOY_SSH_KEY }}"
+          ssh-keyscan -H "${{ secrets.DEPLOY_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null
+
+      - name: docker compose pull && up
+        env:
+          IMAGE: ${{ needs.build.outputs.image }}
+        run: |
+          ssh -i ~/.ssh/deploy_key -o IdentitiesOnly=yes -o BatchMode=yes \
+            "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" bash -s <<EOF
+          set -euo pipefail
+          cd /opt/artai
+
+          # Токен живёт только на время этого запуска — на сервере ничего не остаётся.
+          echo '${{ secrets.GITHUB_TOKEN }}' | docker login ghcr.io -u '${{ github.actor }}' --password-stdin
+
+          export APP_IMAGE='${IMAGE}'
+          docker compose pull app
+          docker compose up -d --remove-orphans
+
+          # Запоминаем выкаченный тег: по нему потом откатываться.
+          if grep -q '^APP_IMAGE=' .env; then
+            sed -i "s|^APP_IMAGE=.*|APP_IMAGE=${IMAGE}|" .env
+          else
+            echo "APP_IMAGE=${IMAGE}" >> .env
+          fi
+
+          docker logout ghcr.io
+          docker image prune -f
+          EOF
+
+      - name: Проверка здоровья
+        run: |
+          for attempt in $(seq 1 20); do
+            body=$(curl -fsS --max-time 10 "http://${{ secrets.DEPLOY_HOST }}/api/health" || true)
+            if echo "$body" | grep -q '"database":"ok"'; then
+              echo "Сервис отвечает: $body"
+              exit 0
+            fi
+            echo "Попытка $attempt: сервис ещё не готов"
+            sleep 6
+          done
+          echo "Приложение не поднялось за две минуты"
+          exit 1

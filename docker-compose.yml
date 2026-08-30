@@ -1,0 +1,22 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: artai-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: artai
+      POSTGRES_PASSWORD: artai
+      POSTGRES_DB: artai
+    # 5433 снаружи, чтобы не конфликтовать с локально установленным PostgreSQL
+    ports:
+      - "5433:5432"
+    volumes:
+      - artai-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U artai -d artai"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  artai-pgdata:

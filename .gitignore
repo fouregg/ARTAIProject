@@ -1,0 +1,25 @@
+# secrets
+.env
+
+# generated images
+storage/
+
+# python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+
+# node
+node_modules/
+frontend/dist/
+
+# IDE / OS
+.idea/
+.vscode/
+.DS_Store
+
+# исходники бренд-системы не нужны в публичном репозитории:
+# рабочие ассеты лежат в frontend/public/brand
+brand_system/

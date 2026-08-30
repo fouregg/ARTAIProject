@@ -1,0 +1,52 @@
+# Боевой compose. Лежит на сервере в /opt/artai/docker-compose.yml.
+# Рядом — файл .env с секретами (в репозиторий он не попадает).
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: artai-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-artai}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?нужен POSTGRES_PASSWORD в .env}
+      POSTGRES_DB: ${POSTGRES_DB:-artai}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-artai} -d ${POSTGRES_DB:-artai}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  app:
+    image: ${APP_IMAGE:-ghcr.io/fouregg/artaiproject:latest}
+    container_name: artai-app
+    restart: unless-stopped
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      # Без домена и TLS слушаем сразу 80-й: http://<ip>/ — терминал, /dome — купол.
+      - "80:8000"
+    volumes:
+      - storage:/app/storage
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/api/health', timeout=5).status == 200 else 1)"
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+volumes:
+  pgdata:
+  storage:

@@ -1,0 +1,16 @@
+.git
+.github
+.venv
+venv
+__pycache__
+*.pyc
+.env
+storage/
+frontend/node_modules
+frontend/dist
+brand_system/
+.idea
+.vscode
+README.md
+deploy/
+docker-compose.yml
