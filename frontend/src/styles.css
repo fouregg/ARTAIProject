@@ -186,6 +186,41 @@ h2,
   text-align: center;
 }
 
+/* --- тумблер языка -------------------------------------------------------- */
+
+.langtoggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface-2);
+  font: inherit;
+  font-size: 0.78rem;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.langtoggle span {
+  padding: 6px 10px;
+  border-radius: 999px;
+  color: var(--muted);
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+/* Селектор с .langtoggle обязателен: иначе правило ниже по специфичности,
+   чем .langtoggle span, и активная метка остаётся синей на синем. */
+.langtoggle .langtoggle__on {
+  background: var(--blue);
+  color: var(--cream);
+  font-weight: 600;
+}
+
+.langtoggle:hover span:not(.langtoggle__on) {
+  color: var(--text);
+}
+
 /* --- фирменные знаки ------------------------------------------------------ */
 
 .brand__event {

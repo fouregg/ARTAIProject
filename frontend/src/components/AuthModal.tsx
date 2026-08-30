@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 
 import { useI18n } from "../i18n/LanguageContext";
-import { REG } from "../i18n/registration";
+import { useReg } from "../i18n/registration";
 import LoginForm from "./LoginForm";
 import RegistrationForm from "./RegistrationForm";
 import { useDialog } from "./useDialog";
@@ -16,6 +16,7 @@ interface Props {
 /** Вход и регистрация в одном окне: переключаемые вкладки, без ухода со страницы. */
 export default function AuthModal({ initialTab, onClose }: Props) {
   const { t } = useI18n();
+  const REG = useReg();
   const dialogRef = useRef<HTMLDivElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
 

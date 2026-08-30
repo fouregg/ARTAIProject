@@ -3,7 +3,7 @@ import { useState } from "react";
 import { ApiError } from "../api/client";
 import { useAuth } from "../auth/AuthContext";
 import { useI18n } from "../i18n/LanguageContext";
-import { REG } from "../i18n/registration";
+import { useReg } from "../i18n/registration";
 
 const CODE_LENGTH = 5;
 
@@ -16,6 +16,7 @@ interface Props {
 export default function LoginForm({ onDone, onNeedsRegistration }: Props) {
   const { t } = useI18n();
   const { signIn } = useAuth();
+  const REG = useReg();
 
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);

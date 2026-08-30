@@ -4,7 +4,8 @@ import { ApiError } from "../api/client";
 import type { LegalBundle } from "../api/client";
 import { loadLegal } from "../api/legalCache";
 import { useAuth } from "../auth/AuthContext";
-import { REG } from "../i18n/registration";
+import { useI18n } from "../i18n/LanguageContext";
+import { useReg } from "../i18n/registration";
 
 const ADULT_AGE = 18;
 const CODE_LENGTH = 5;
@@ -30,6 +31,8 @@ interface Props {
 /** Экран 1 терминала: код доступа, анкета участника и две обязательные отметки. */
 export default function RegistrationForm({ initialCode = "", hint, onDone }: Props) {
   const { signUp } = useAuth();
+  const { uiLanguage } = useI18n();
+  const REG = useReg();
 
   const [legal, setLegal] = useState<LegalBundle | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -106,7 +109,7 @@ export default function RegistrationForm({ initialCode = "", hint, onDone }: Pro
           version: document.version,
           sha256: document.sha256,
         })),
-        ui_language: "ru",
+        ui_language: uiLanguage,
       });
       onDone();
     } catch (caught) {

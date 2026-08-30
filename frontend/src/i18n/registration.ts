@@ -1,12 +1,50 @@
 /**
- * Подписи экрана 1 (анкета участника).
+ * Подписи экранов входа и анкеты участника.
  *
- * Только на русском — сознательно: соглашение и согласие на обработку данных
- * действуют в русской редакции (п. 13.2 Соглашения), а переводить юридические
- * формулировки самостоятельно нельзя. Тексты галочек, возрастное уведомление и
- * маркировку изображения отдаёт бэкенд из документа «Экранные тексты терминала».
+ * Здесь только русский и английский — те же языки, между которыми переключает
+ * тумблер в шапке. Тексты самих согласий не переводятся сознательно: соглашение
+ * действует в русской редакции (п. 13.2), а их формулировки приходят с бэкенда
+ * из документа «Экранные тексты терминала».
  */
-export const REG = {
+import { useI18n } from "./LanguageContext";
+
+export interface RegistrationMessages {
+  authOpen: string;
+  tabLogin: string;
+  tabRegister: string;
+  codeLabel: string;
+  codeHint: string;
+  needAuth: string;
+  notRegistered: string;
+  registerSubmit: string;
+  haveCode: string;
+  noAccount: string;
+  goLogin: string;
+  goRegister: string;
+
+  title: string;
+  subtitle: string;
+
+  lastName: string;
+  firstName: string;
+  middleName: string;
+  birthDate: string;
+  country: string;
+
+  representative: string;
+  agreementFull: string;
+  consentFull: string;
+  policy: string;
+
+  submit: string;
+  submitting: string;
+  required: string;
+  checkboxesRequired: string;
+  loading: string;
+  loadFailed: string;
+}
+
+const RU: RegistrationMessages = {
   authOpen: "Войти / Регистрация",
   tabLogin: "Вход",
   tabRegister: "Регистрация",
@@ -29,7 +67,8 @@ export const REG = {
   birthDate: "Дата рождения",
   country: "Страна",
 
-  representative: "Отмечаю за несовершеннолетнего: я его родитель или иной законный представитель",
+  representative:
+    "Отмечаю за несовершеннолетнего: я его родитель или иной законный представитель",
   agreementFull: "Полный текст соглашения",
   consentFull: "Полный текст согласия",
   policy: "Политика обработки персональных данных",
@@ -40,4 +79,48 @@ export const REG = {
   checkboxesRequired: "Чтобы продолжить, отметьте оба согласия",
   loading: "Загружаем тексты…",
   loadFailed: "Не удалось загрузить тексты соглашений",
-} as const;
+};
+
+const EN: RegistrationMessages = {
+  authOpen: "Sign in / Register",
+  tabLogin: "Sign in",
+  tabRegister: "Register",
+  codeLabel: "Access code",
+  codeHint: "5 digits from your ticket",
+  needAuth: "To send a request, sign in or register.",
+  notRegistered: "There is no form for this code yet — fill it in here.",
+  registerSubmit: "Register",
+  haveCode: "Already registered?",
+  noAccount: "First time here?",
+  goLogin: "Sign in with a code",
+  goRegister: "Fill in the form",
+
+  title: "Participant details",
+  subtitle: "Fill in the form to start creating images",
+
+  lastName: "Last name",
+  firstName: "First name",
+  middleName: "Middle name (if any)",
+  birthDate: "Date of birth",
+  country: "Country",
+
+  representative:
+    "I am ticking on behalf of a minor: I am their parent or legal representative",
+  agreementFull: "Full text of the agreement",
+  consentFull: "Full text of the consent",
+  policy: "Personal data processing policy",
+
+  submit: "Continue",
+  submitting: "Saving…",
+  required: "Fill in all required fields",
+  checkboxesRequired: "To continue, tick both consents",
+  loading: "Loading the texts…",
+  loadFailed: "Could not load the agreement texts",
+};
+
+export const REGISTRATION = { ru: RU, en: EN } as const;
+
+export function useReg(): RegistrationMessages {
+  const { uiLanguage } = useI18n();
+  return uiLanguage === "en" ? EN : RU;
+}
