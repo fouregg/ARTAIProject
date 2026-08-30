@@ -1,8 +1,11 @@
 #!/usr/bin/env bash
 # Подготовка сервера под автодеплой. Запускается один раз от root:
 #
-#   curl -fsSL https://raw.githubusercontent.com/fouregg/ARTAIProject/main/deploy/bootstrap.sh | bash
+#   DEPLOY_PUBKEY='ssh-ed25519 AAAA... github-actions-artai-deploy' \
+#     bash <(curl -fsSL https://raw.githubusercontent.com/fouregg/ARTAIProject/main/deploy/bootstrap.sh)
 #
+# DEPLOY_PUBKEY — публичная часть ключа, приватная лежит в секрете DEPLOY_SSH_KEY.
+# Можно передать несколько ключей через перевод строки.
 # Скрипт идемпотентный: повторный запуск ничего не ломает и не перезаписывает .env.
 set -euo pipefail
 
@@ -69,32 +72,29 @@ ENV
   echo "ОСТАЛОСЬ: вписать PROVOD_API_KEY"
 fi
 
-say "4. Ключ для деплоя из GitHub Actions"
-if [[ -f /root/.ssh/artai_deploy ]]; then
-  echo "ключ уже создан"
+say "4. Ключи доступа"
+install -d -m 700 /root/.ssh
+touch /root/.ssh/authorized_keys
+chmod 600 /root/.ssh/authorized_keys
+
+if [[ -n "${DEPLOY_PUBKEY:-}" ]]; then
+  while IFS= read -r key; do
+    [[ -z "$key" ]] && continue
+    if grep -qxF "$key" /root/.ssh/authorized_keys; then
+      echo "уже добавлен: ${key##* }"
+    else
+      echo "$key" >> /root/.ssh/authorized_keys
+      echo "добавлен: ${key##* }"
+    fi
+  done <<< "$DEPLOY_PUBKEY"
 else
-  install -d -m 700 /root/.ssh
-  ssh-keygen -t ed25519 -N '' -C 'github-actions-artai' -f /root/.ssh/artai_deploy >/dev/null
-  cat /root/.ssh/artai_deploy.pub >> /root/.ssh/authorized_keys
-  chmod 600 /root/.ssh/authorized_keys
-  echo "создан и добавлен в authorized_keys"
+  echo "DEPLOY_PUBKEY не передан — ключ для Actions придётся добавить вручную"
 fi
 
-say "Готово. Дальше:"
-cat <<'NEXT'
-  1. Впишите ключ provod.ai:   nano /opt/artai/.env
-  2. Скопируйте приватный ключ целиком и положите его в секрет DEPLOY_SSH_KEY:
-NEXT
+say "Готово. Осталось вписать ключ provod.ai:"
+echo "  nano /opt/artai/.env      # строка PROVOD_API_KEY"
 echo
-cat /root/.ssh/artai_deploy
-echo
-cat <<'NEXT'
-  3. В репозитории задайте секреты:
-       gh secret set DEPLOY_HOST    --body "159.194.206.14"
-       gh secret set DEPLOY_USER    --body "root"
-       gh secret set DEPLOY_SSH_KEY < приватный_ключ_из_вывода_выше
-  4. Запушьте в main — деплой пойдёт сам.
-
-  Токен купола (для адреса /dome?token=...):
-NEXT
+echo "Токен купола для адреса /dome?token=... :"
 grep '^DOME_TOKEN=' /opt/artai/.env
+echo
+echo "После этого достаточно запушить в main — деплой пойдёт сам."

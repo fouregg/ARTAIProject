@@ -15,15 +15,17 @@ deploy: ssh root@159.194.206.14 → docker compose pull && up -d
 
 ## Первичная настройка сервера
 
-Один раз, от root на сервере:
+Один раз, от root на сервере. `DEPLOY_PUBKEY` — публичный ключ, приватная часть
+которого лежит в секрете `DEPLOY_SSH_KEY`:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/fouregg/ARTAIProject/main/deploy/bootstrap.sh | bash
+DEPLOY_PUBKEY='ssh-ed25519 AAAA... github-actions-artai-deploy' \
+  bash <(curl -fsSL https://raw.githubusercontent.com/fouregg/ARTAIProject/main/deploy/bootstrap.sh)
 ```
 
 Скрипт ставит Docker, создаёт `/opt/artai` с `docker-compose.yml`, генерирует `.env`
-(пароль базы и токен купола — случайные), заводит отдельный SSH-ключ для Actions
-и печатает всё, что нужно положить в секреты.
+(пароль базы и токен купола — случайные) и прописывает ключ в `authorized_keys`.
+Повторный запуск безопасен: `.env` не перезаписывается, ключи не дублируются.
 
 После него остаётся вписать ключ provod.ai:
 
