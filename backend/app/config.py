@@ -25,6 +25,10 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
+    app_title: str = "ARTAI — генератор изображений для цифрового холста"
+    app_version: str = "1.0.0"
+    log_level: str = "INFO"
+
     provod_api_key: str = ""
     provod_base_url: str = "https://api.provod.ai/v1"
     provod_image_model: str = "openai/gpt-image-2"

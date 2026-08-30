@@ -15,7 +15,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import get_settings
 from app.db import SessionLocal, get_session
-from app.deps import require_access_code
+from app.api.dependencies import require_access_code
 from app.models import DomeItem, Generation, User
 from app.schemas import DomeDisplayRequest, DomeItemOut
 from app.services.cleanup import EXPIRED_DETAIL

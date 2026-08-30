@@ -3,7 +3,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db import get_session
-from app.deps import require_access_code
+from app.api.dependencies import require_access_code
 from app.models import Generation, GalleryItem, User
 from app.schemas import GalleryAddRequest, GalleryItemOut
 from app.services.cleanup import EXPIRED_DETAIL

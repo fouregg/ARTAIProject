@@ -68,7 +68,7 @@ docker compose up -d
 # 3. Бэкенд
 python3 -m venv .venv
 .venv/bin/pip install -r backend/requirements.txt
-cd backend && ../.venv/bin/python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 1
+cd backend && ../.venv/bin/python -m uvicorn app.api.main:get_app --factory --host 0.0.0.0 --port 8000 --workers 1
 ```
 
 Миграции применяются на старте автоматически (`AUTO_MIGRATE=true`). Вручную:
@@ -85,6 +85,27 @@ npm run build    # прод-сборка в frontend/dist — её отдаёт 
 
 После `npm run build` всё приложение доступно на `http://localhost:8000` одним origin —
 у купола не будет ни CORS, ни mixed-content.
+
+## Структура бэкенда
+
+Приложение собирается фабрикой: `main.py` только вызывает шаги настройки по порядку
+и сам ничего не регистрирует.
+
+```
+backend/app/
+├─ api/
+│  ├─ main.py          get_app(): фабрика приложения, запуск через --factory
+│  ├─ factories.py     голый FastAPI из настроек
+│  ├─ setup.py         setup_logging / setup_middlewares / bind_routes / setup_frontend
+│  ├─ lifespan.py      http-клиент шлюза, миграции, фоновые задачи
+│  ├─ dependencies.py  Depends: код доступа, анкета, квота, клиент provod
+│  └─ routes/          health, auth, legal, generate, gallery, dome
+├─ services/           перевод и генерация, доступ, анкеты, уборщик, хаб холста
+├─ config.py  db.py  models.py  schemas.py
+```
+
+`bind_routes` собирает общий `APIRouter` и подключает его одним вызовом,
+`setup_frontend` идёт последним: catch-all маршрут фронтенда иначе перехватил бы `/api`.
 
 ## Переменные окружения
 
@@ -279,6 +300,6 @@ cd backend && ../.venv/bin/python -m scripts.check_translation
   версию в `backend/app/services/legal.py`: хеш пересчитается автоматически.
 - Галерея сейчас общая: гость видит все сохранённые картинки, а не только свои.
   Чтобы сделать её персональной, достаточно отфильтровать список по `user_id`
-  в [`backend/app/routers/gallery.py`](backend/app/routers/gallery.py).
+  в [`backend/app/api/routes/gallery.py`](backend/app/api/routes/gallery.py).
 - Интерфейс переведён на семь языков, но переключатель убран, поэтому показывается
   русский. Вернуть выбор — восстановить селектор языка на странице ввода.

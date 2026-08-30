@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import get_settings
 from app.db import get_session
-from app.deps import get_provod
+from app.api.dependencies import get_provod
 from app.schemas import HealthOut
 from app.services.dome_hub import hub
 from app.services.provod import ProvodClient

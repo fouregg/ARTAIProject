@@ -31,5 +31,6 @@ RUN mkdir -p /app/storage
 WORKDIR /app/backend
 EXPOSE 8000
 
-# Хаб подключений купола живёт в памяти процесса — только один воркер.
-CMD ["python", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1"]
+# Хаб подключений цифрового холста живёт в памяти процесса — только один воркер.
+CMD ["python", "-m", "uvicorn", "app.api.main:get_app", "--factory", \
+     "--host", "0.0.0.0", "--port", "8000", "--workers", "1"]

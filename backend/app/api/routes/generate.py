@@ -6,7 +6,7 @@ from fastapi.responses import FileResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db import get_session
-from app.deps import get_provod, require_quota
+from app.api.dependencies import get_provod, require_quota
 from app.models import Generation, User
 from app.schemas import GenerateRequest, JobCreated, JobStatus
 from app.services import storage
