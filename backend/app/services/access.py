@@ -9,6 +9,7 @@
 import logging
 import secrets
 import time
+import unicodedata
 from collections import deque
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -68,12 +69,27 @@ login_limiter = LoginRateLimiter()
 
 
 def normalize_code(raw: str) -> str:
-    """Убираем пробелы и дефисы: код часто диктуют или печатают на билете."""
-    return "".join(ch for ch in raw if ch.isdigit())
+    """Приводим ввод к пяти латинским цифрам.
+
+    Убираем пробелы и дефисы: код часто диктуют или печатают на билете.
+    И переводим цифры любой письменности в латинские: китайская раскладка в
+    полноширинном режиме даёт «５０１７９», арабская — «٥٠١٧٩». Для str.isdigit()
+    это цифры, но в базе такой код не найдётся, и гость видел «Неверный код».
+    """
+    digits = []
+    for ch in raw:
+        if not ch.isdigit():
+            continue
+        try:
+            digits.append(str(unicodedata.digit(ch)))
+        except (TypeError, ValueError):
+            continue
+    return "".join(digits)
 
 
 def is_valid_format(code: str) -> bool:
-    return len(code) == CODE_LENGTH and code.isdigit()
+    # После normalize_code цифры латинские; проверка заодно ловит вызовы в обход него.
+    return len(code) == CODE_LENGTH and code.isascii() and code.isdigit()
 
 
 async def get_user_by_code(session: AsyncSession, code: str) -> User | None:

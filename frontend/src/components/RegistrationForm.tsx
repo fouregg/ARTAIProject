@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 
 import { ApiError } from "../api/client";
+import { toAsciiDigits } from "../api/digits";
 import type { LegalBundle } from "../api/client";
 import { loadLegal } from "../api/legalCache";
 import { useAuth } from "../auth/AuthContext";
@@ -137,7 +138,7 @@ export default function RegistrationForm({ initialCode = "", hint, onDone }: Pro
           className="field field--code field--code-inline"
           value={code}
           onChange={(event) =>
-            setCode(event.target.value.replace(/\D/g, "").slice(0, CODE_LENGTH))
+            setCode(toAsciiDigits(event.target.value).slice(0, CODE_LENGTH))
           }
           inputMode="numeric"
           autoComplete="off"

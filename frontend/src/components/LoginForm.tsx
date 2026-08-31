@@ -1,6 +1,7 @@
 import { useState } from "react";
 
 import { ApiError } from "../api/client";
+import { toAsciiDigits } from "../api/digits";
 import { useAuth } from "../auth/AuthContext";
 import { useI18n } from "../i18n/LanguageContext";
 import { useReg } from "../i18n/registration";
@@ -47,7 +48,7 @@ export default function LoginForm({ onDone, onNeedsRegistration }: Props) {
       <input
         className="field field--code"
         value={code}
-        onChange={(event) => setCode(event.target.value.replace(/\D/g, "").slice(0, CODE_LENGTH))}
+        onChange={(event) => setCode(toAsciiDigits(event.target.value).slice(0, CODE_LENGTH))}
         inputMode="numeric"
         autoComplete="off"
         autoFocus
