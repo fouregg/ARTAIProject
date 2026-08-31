@@ -63,7 +63,7 @@ export interface DomeItem {
 }
 
 export interface AccessState {
-  code: string;
+  email: string;
   limit: number;
   used: number;
   remaining: number;
@@ -90,6 +90,7 @@ export interface LegalBundle {
 }
 
 export interface RegisterParams {
+  email: string;
   last_name: string;
   first_name: string;
   middle_name: string | null;
@@ -100,15 +101,15 @@ export interface RegisterParams {
   ui_language: string;
 }
 
-const CODE_STORAGE_KEY = "artai.code";
+const EMAIL_STORAGE_KEY = "artai.email";
 
-export function getStoredCode(): string | null {
-  return localStorage.getItem(CODE_STORAGE_KEY);
+export function getStoredEmail(): string | null {
+  return localStorage.getItem(EMAIL_STORAGE_KEY);
 }
 
-export function storeCode(code: string | null): void {
-  if (code) localStorage.setItem(CODE_STORAGE_KEY, code);
-  else localStorage.removeItem(CODE_STORAGE_KEY);
+export function storeEmail(email: string | null): void {
+  if (email) localStorage.setItem(EMAIL_STORAGE_KEY, email);
+  else localStorage.removeItem(EMAIL_STORAGE_KEY);
 }
 
 export interface AdminDomeItem {
@@ -132,13 +133,13 @@ export class ApiError extends Error {
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const code = getStoredCode();
+  const email = getStoredEmail();
   const response = await fetch(path, {
     ...init,
     headers: {
       "Content-Type": "application/json",
-      // Код доступа — он же учётка: одного заголовка достаточно, сессий не заводим.
-      ...(code ? { "X-Access-Code": code } : {}),
+      // Почта — она же учётка: одного заголовка достаточно, сессий не заводим.
+      ...(email ? { "X-Access-Email": email } : {}),
       ...(init?.headers ?? {}),
     },
   });
@@ -157,8 +158,8 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   return response.status === 204 ? (undefined as T) : ((await response.json()) as T);
 }
 
-export function login(code: string): Promise<AccessState> {
-  return request("/api/auth/login", { method: "POST", body: JSON.stringify({ code }) });
+export function login(email: string): Promise<AccessState> {
+  return request("/api/auth/login", { method: "POST", body: JSON.stringify({ email }) });
 }
 
 export function fetchAccessState(): Promise<AccessState> {

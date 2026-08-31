@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 
 import { ApiError } from "../api/client";
-import { toAsciiDigits } from "../api/digits";
 import type { LegalBundle } from "../api/client";
 import { loadLegal } from "../api/legalCache";
 import { useAuth } from "../auth/AuthContext";
@@ -9,7 +8,6 @@ import { useI18n } from "../i18n/LanguageContext";
 import { useReg } from "../i18n/registration";
 
 const ADULT_AGE = 18;
-const CODE_LENGTH = 5;
 
 function ageOn(birthDate: string, today: Date): number | null {
   const born = new Date(birthDate);
@@ -24,13 +22,13 @@ function ageOn(birthDate: string, today: Date): number | null {
 }
 
 interface Props {
-  initialCode?: string;
+  initialEmail?: string;
   hint?: string | null;
   onDone: () => void;
 }
 
 /** Экран 1 терминала: код доступа, анкета участника и две обязательные отметки. */
-export default function RegistrationForm({ initialCode = "", hint, onDone }: Props) {
+export default function RegistrationForm({ initialEmail = "", hint, onDone }: Props) {
   const { signUp } = useAuth();
   const { uiLanguage } = useI18n();
   const REG = useReg();
@@ -38,7 +36,7 @@ export default function RegistrationForm({ initialCode = "", hint, onDone }: Pro
   const [legal, setLegal] = useState<LegalBundle | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
 
-  const [code, setCode] = useState(initialCode);
+  const [email, setEmail] = useState(initialEmail);
   const [lastName, setLastName] = useState("");
   const [firstName, setFirstName] = useState("");
   const [middleName, setMiddleName] = useState("");
@@ -52,7 +50,7 @@ export default function RegistrationForm({ initialCode = "", hint, onDone }: Pro
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => setCode(initialCode), [initialCode]);
+  useEffect(() => setEmail(initialEmail), [initialEmail]);
 
   useEffect(() => {
     let cancelled = false;
@@ -68,7 +66,7 @@ export default function RegistrationForm({ initialCode = "", hint, onDone }: Pro
   const minorNeedsRepresentative = age !== null && age < ADULT_AGE && !isRepresentative;
 
   const fieldsFilled =
-    code.length === CODE_LENGTH &&
+    email.includes("@") &&
     lastName.trim() !== "" &&
     firstName.trim() !== "" &&
     birthDate !== "" &&
@@ -98,7 +96,8 @@ export default function RegistrationForm({ initialCode = "", hint, onDone }: Pro
     setError(null);
     try {
       // Отправляем редакцию и хеш именно тех текстов, что были на экране (п. 12.1).
-      await signUp(code, {
+      await signUp({
+        email: email.trim(),
         last_name: lastName.trim(),
         first_name: firstName.trim(),
         middle_name: middleName.trim() || null,
@@ -132,18 +131,17 @@ export default function RegistrationForm({ initialCode = "", hint, onDone }: Pro
 
       <label className="control">
         <span>
-          {REG.codeLabel} * <span className="control__hint">{REG.codeHint}</span>
+          {REG.emailLabel} * <span className="control__hint">{REG.emailHint}</span>
         </span>
         <input
-          className="field field--code field--code-inline"
-          value={code}
-          onChange={(event) =>
-            setCode(toAsciiDigits(event.target.value).slice(0, CODE_LENGTH))
-          }
-          inputMode="numeric"
-          autoComplete="off"
-          maxLength={CODE_LENGTH}
-          placeholder="00000"
+          className="field field--email"
+          type="email"
+          value={email}
+          onChange={(event) => setEmail(event.target.value)}
+          inputMode="email"
+          autoComplete="email"
+          maxLength={255}
+          placeholder="name@example.com"
           disabled={busy}
         />
       </label>

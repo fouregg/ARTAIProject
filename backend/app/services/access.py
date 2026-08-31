@@ -1,15 +1,13 @@
-"""Учётки-коды: выпуск, вход и подсчёт оставшихся генераций.
+"""Учётки: вход по электронной почте и подсчёт оставшихся генераций.
 
-Код из 5 цифр — это и логин, и пароль одновременно, поэтому пространство кодов
-маленькое (100 000). Чтобы его нельзя было перебрать, вход ограничен по частоте:
-см. LoginRateLimiter ниже. Для публичной установки этого достаточно, для интернета —
-стоит добавить капчу или удлинить код.
+Почта здесь одновременно и логин, и единственный признак участника: пароля нет,
+письма с подтверждением не отправляются. Поэтому вход ограничен по частоте —
+см. LoginRateLimiter, иначе чужую квоту можно было бы израсходовать, просто зная адрес.
 """
 
 import logging
-import secrets
+import re
 import time
-import unicodedata
 from collections import deque
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -17,13 +15,14 @@ from datetime import datetime, timezone
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.config import get_settings
 from app.models import Generation, User
 
 logger = logging.getLogger(__name__)
 
-CODE_LENGTH = 5
-CODE_SPACE = 10**CODE_LENGTH
-DEFAULT_CODE_LIMIT = 10
+EMAIL_MAX_LENGTH = 255
+# Намеренно нестрогая проверка: задача — отсечь опечатки, а не пересказать RFC 5322.
+EMAIL_PATTERN = re.compile(r"^[^@\s]+@[^@\s.]+(\.[^@\s.]+)+$")
 
 # Вход: не больше 10 попыток с одного адреса за минуту.
 LOGIN_ATTEMPTS = 10
@@ -32,7 +31,7 @@ LOGIN_WINDOW_SECONDS = 60
 
 @dataclass(slots=True)
 class AccessState:
-    code: str
+    email: str
     limit: int
     used: int
 
@@ -68,36 +67,38 @@ class LoginRateLimiter:
 login_limiter = LoginRateLimiter()
 
 
-def normalize_code(raw: str) -> str:
-    """Приводим ввод к пяти латинским цифрам.
-
-    Убираем пробелы и дефисы: код часто диктуют или печатают на билете.
-    И переводим цифры любой письменности в латинские: китайская раскладка в
-    полноширинном режиме даёт «５０１７９», арабская — «٥٠١٧٩». Для str.isdigit()
-    это цифры, но в базе такой код не найдётся, и гость видел «Неверный код».
-    """
-    digits = []
-    for ch in raw:
-        if not ch.isdigit():
-            continue
-        try:
-            digits.append(str(unicodedata.digit(ch)))
-        except (TypeError, ValueError):
-            continue
-    return "".join(digits)
+def normalize_email(raw: str) -> str:
+    """Приводим к одному виду: пробелы по краям и регистр не должны создавать учётки-двойники."""
+    return raw.strip().lower()
 
 
-def is_valid_format(code: str) -> bool:
-    # После normalize_code цифры латинские; проверка заодно ловит вызовы в обход него.
-    return len(code) == CODE_LENGTH and code.isascii() and code.isdigit()
+def is_valid_email(email: str) -> bool:
+    return len(email) <= EMAIL_MAX_LENGTH and EMAIL_PATTERN.match(email) is not None
 
 
-async def get_user_by_code(session: AsyncSession, code: str) -> User | None:
-    if not is_valid_format(code):
+async def get_user_by_email(session: AsyncSession, email: str) -> User | None:
+    if not is_valid_email(email):
         return None
     return await session.scalar(
-        select(User).where(User.code == code, User.is_active.is_(True))
+        select(User).where(User.email == email, User.is_active.is_(True))
     )
+
+
+async def get_or_create_user(session: AsyncSession, email: str) -> User:
+    """Учётка заводится в момент регистрации: отдельного шага «создать аккаунт» нет."""
+    user = await get_user_by_email(session, email)
+    if user is not None:
+        return user
+
+    user = User(
+        email=email,
+        display_name=email,
+        generations_limit=get_settings().code_generations_limit,
+        is_active=True,
+    )
+    session.add(user)
+    await session.flush()
+    return user
 
 
 async def count_used(session: AsyncSession, user: User) -> int:
@@ -113,7 +114,7 @@ async def count_used(session: AsyncSession, user: User) -> int:
 
 async def get_state(session: AsyncSession, user: User) -> AccessState:
     return AccessState(
-        code=user.code or "",
+        email=user.email or "",
         limit=user.generations_limit,
         used=await count_used(session, user),
     )
@@ -122,45 +123,3 @@ async def get_state(session: AsyncSession, user: User) -> AccessState:
 async def touch(session: AsyncSession, user: User) -> None:
     user.last_used_at = datetime.now(timezone.utc)
     await session.commit()
-
-
-async def create_codes(
-    session: AsyncSession,
-    count: int,
-    limit: int = DEFAULT_CODE_LIMIT,
-) -> list[str]:
-    """Выпускает `count` новых уникальных кодов. Рассчитано и на 10 000 штук за раз."""
-    if count <= 0:
-        return []
-
-    taken = set(
-        (await session.scalars(select(User.code).where(User.code.is_not(None)))).all()
-    )
-    if len(taken) + count > CODE_SPACE:
-        raise ValueError(
-            f"Столько кодов не выпустить: всего возможно {CODE_SPACE}, "
-            f"занято {len(taken)}."
-        )
-
-    fresh: list[str] = []
-    while len(fresh) < count:
-        code = f"{secrets.randbelow(CODE_SPACE):0{CODE_LENGTH}d}"
-        if code in taken:
-            continue
-        taken.add(code)
-        fresh.append(code)
-
-    session.add_all(
-        [
-            User(
-                code=code,
-                display_name=f"code-{code}",
-                generations_limit=limit,
-                is_active=True,
-            )
-            for code in fresh
-        ]
-    )
-    await session.commit()
-    logger.info("Выпущено кодов: %s (лимит %s генераций на код)", len(fresh), limit)
-    return fresh

@@ -80,14 +80,6 @@ docker compose exec postgres psql -U artai -d artai   # база
 docker compose restart app
 ```
 
-Выпуск кодов доступа на боевом сервере:
-
-```bash
-docker compose exec app python -m scripts.create_codes --count 10000 --quiet
-docker compose exec postgres psql -U artai -d artai -c \
-  "select code from users where code is not null order by created_at desc limit 20;"
-```
-
 ## Пока без HTTPS
 
 Сейчас приложение слушает 80-й порт по IP. Это осознанный временный режим, но помните:

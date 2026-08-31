@@ -3,7 +3,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db import get_session
-from app.api.dependencies import require_access_code
+from app.api.dependencies import require_access_email
 from app.models import Generation, GalleryItem, User
 from app.schemas import GalleryAddRequest, GalleryItemOut
 from app.services.cleanup import EXPIRED_DETAIL
@@ -28,7 +28,7 @@ def _to_out(item: GalleryItem, generation: Generation) -> GalleryItemOut:
 @router.post("", response_model=GalleryItemOut, status_code=status.HTTP_201_CREATED)
 async def add_to_gallery(
     payload: GalleryAddRequest,
-    user: User = Depends(require_access_code),
+    user: User = Depends(require_access_email),
     session: AsyncSession = Depends(get_session),
 ) -> GalleryItemOut:
     generation = await session.get(Generation, payload.generation_id)

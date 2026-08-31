@@ -12,8 +12,8 @@ export interface RegistrationMessages {
   authOpen: string;
   tabLogin: string;
   tabRegister: string;
-  codeLabel: string;
-  codeHint: string;
+  emailLabel: string;
+  emailHint: string;
   needAuth: string;
   notRegistered: string;
   registerSubmit: string;
@@ -48,14 +48,14 @@ const RU: RegistrationMessages = {
   authOpen: "Войти / Регистрация",
   tabLogin: "Вход",
   tabRegister: "Регистрация",
-  codeLabel: "Код доступа",
-  codeHint: "5 цифр с вашего билета",
+  emailLabel: "Электронная почта",
+  emailHint: "по ней вы сможете вернуться",
   needAuth: "Чтобы отправить запрос, войдите или зарегистрируйтесь.",
-  notRegistered: "У этого кода ещё нет анкеты — заполните её здесь.",
+  notRegistered: "Эта почта ещё не зарегистрирована — заполните анкету здесь.",
   registerSubmit: "Зарегистрироваться",
   haveCode: "Уже регистрировались?",
   noAccount: "Первый раз?",
-  goLogin: "Войти по коду",
+  goLogin: "Войти по почте",
   goRegister: "Заполнить анкету",
 
   title: "Данные участника",
@@ -85,14 +85,14 @@ const EN: RegistrationMessages = {
   authOpen: "Sign in / Register",
   tabLogin: "Sign in",
   tabRegister: "Register",
-  codeLabel: "Access code",
-  codeHint: "5 digits from your ticket",
+  emailLabel: "Email",
+  emailHint: "you will use it to come back",
   needAuth: "To send a request, sign in or register.",
-  notRegistered: "There is no form for this code yet — fill it in here.",
+  notRegistered: "This email is not registered yet — fill in the form here.",
   registerSubmit: "Register",
   haveCode: "Already registered?",
   noAccount: "First time here?",
-  goLogin: "Sign in with a code",
+  goLogin: "Sign in with your email",
   goRegister: "Fill in the form",
 
   title: "Participant details",

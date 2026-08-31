@@ -145,6 +145,7 @@ h2,
 }
 
 .field--prompt,
+.field--email,
 .field--code {
   text-align: center;
   padding: 16px 18px;
@@ -159,11 +160,8 @@ textarea.field--prompt {
   text-align: start;
 }
 
-.field--code {
-  font-size: 2rem;
-  letter-spacing: 0.5em;
-  text-indent: 0.5em;
-  font-variant-numeric: tabular-nums;
+.field--email {
+  font-size: 1.05rem;
 }
 
 .topbar {
@@ -424,12 +422,6 @@ textarea.field--prompt {
 .control__hint {
   color: var(--muted);
   font-weight: 400;
-}
-
-.field--code-inline {
-  font-size: 1.4rem;
-  letter-spacing: 0.35em;
-  text-indent: 0.35em;
 }
 
 /* --- анкета участника (экран 1) ------------------------------------------ */

@@ -21,7 +21,7 @@ export default function AuthModal({ initialTab, onClose }: Props) {
   const closeButtonRef = useRef<HTMLButtonElement>(null);
 
   const [tab, setTab] = useState<AuthTab>(initialTab);
-  const [code, setCode] = useState("");
+  const [email, setEmail] = useState("");
   const [hint, setHint] = useState<string | null>(null);
 
   useDialog(dialogRef, onClose);
@@ -85,9 +85,9 @@ export default function AuthModal({ initialTab, onClose }: Props) {
           <>
             <LoginForm
               onDone={onClose}
-              onNeedsRegistration={(enteredCode) => {
-                // Код настоящий, но анкеты по нему ещё нет — переносим его в регистрацию.
-                setCode(enteredCode);
+              onNeedsRegistration={(enteredEmail) => {
+                // Почта известна, но анкеты по ней нет — переносим её в регистрацию.
+                setEmail(enteredEmail);
                 setHint(REG.notRegistered);
                 setTab("register");
               }}
@@ -101,7 +101,7 @@ export default function AuthModal({ initialTab, onClose }: Props) {
           </>
         ) : (
           <>
-            <RegistrationForm initialCode={code} hint={hint} onDone={onClose} />
+            <RegistrationForm initialEmail={email} hint={hint} onDone={onClose} />
             <p className="authswitch">
               {REG.haveCode}{" "}
               <button type="button" className="linkbtn" onClick={() => switchTo("login")}>

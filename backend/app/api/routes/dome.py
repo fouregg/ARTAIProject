@@ -15,7 +15,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import get_settings
 from app.db import SessionLocal, get_session
-from app.api.dependencies import require_access_code
+from app.api.dependencies import require_access_email
 from app.models import DomeItem, Generation, User
 from app.schemas import DomeDisplayRequest, DomeItemOut
 from app.services.cleanup import EXPIRED_DETAIL
@@ -59,7 +59,7 @@ async def _load_items(session: AsyncSession) -> list[DomeItemOut]:
 @router.post("/api/dome/display", response_model=DomeItemOut, status_code=status.HTTP_201_CREATED)
 async def display_on_dome(
     payload: DomeDisplayRequest,
-    _: User = Depends(require_access_code),
+    _: User = Depends(require_access_email),
     session: AsyncSession = Depends(get_session),
 ) -> DomeItemOut:
     generation = await session.get(Generation, payload.generation_id)

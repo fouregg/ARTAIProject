@@ -4,18 +4,18 @@ import type { ReactNode } from "react";
 import {
   ApiError,
   fetchAccessState,
-  getStoredCode,
+  getStoredEmail,
   login as loginRequest,
   register as registerRequest,
-  storeCode,
+  storeEmail,
 } from "../api/client";
 import type { AccessState, RegisterParams } from "../api/client";
 
 interface AuthContextValue {
   access: AccessState | null;
   checking: boolean;
-  signIn: (code: string) => Promise<AccessState>;
-  signUp: (code: string, params: RegisterParams) => Promise<AccessState>;
+  signIn: (email: string) => Promise<AccessState>;
+  signUp: (params: RegisterParams) => Promise<AccessState>;
   signOut: () => void;
   refresh: () => Promise<void>;
   setAccess: (state: AccessState) => void;
@@ -29,7 +29,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Код лежит в localStorage: после перезагрузки проверяем, что он ещё жив.
   useEffect(() => {
-    if (!getStoredCode()) {
+    if (!getStoredEmail()) {
       setChecking(false);
       return;
     }
@@ -38,7 +38,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     fetchAccessState()
       .then((state) => !cancelled && setAccess(state))
       .catch(() => {
-        if (!cancelled) storeCode(null);
+        if (!cancelled) storeEmail(null);
       })
       .finally(() => !cancelled && setChecking(false));
 
@@ -47,35 +47,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  const signIn = useCallback(async (code: string) => {
-    // Код сохраняем до запроса: заголовок X-Access-Code берётся из localStorage.
-    const previous = getStoredCode();
-    storeCode(code);
+  const signIn = useCallback(async (email: string) => {
+    // Почту сохраняем до запроса: заголовок X-Access-Email берётся из localStorage.
+    const previous = getStoredEmail();
+    storeEmail(email);
     try {
-      const state = await loginRequest(code);
+      const state = await loginRequest(email);
       setAccess(state);
       return state;
     } catch (error) {
-      storeCode(previous);
+      storeEmail(previous);
       throw error;
     }
   }, []);
 
-  const signUp = useCallback(async (code: string, params: RegisterParams) => {
-    const previous = getStoredCode();
-    storeCode(code);
+  const signUp = useCallback(async (params: RegisterParams) => {
+    // Регистрация сама заводит учётку, поэтому почту кладём заранее — по ней пойдут
+    // следующие запросы. Не удалось — возвращаем прежнюю.
+    const previous = getStoredEmail();
+    storeEmail(params.email);
     try {
       const state = await registerRequest(params);
       setAccess(state);
       return state;
     } catch (error) {
-      storeCode(previous);
+      storeEmail(previous);
       throw error;
     }
   }, []);
 
   const signOut = useCallback(() => {
-    storeCode(null);
+    storeEmail(null);
     setAccess(null);
   }, []);
 
@@ -85,7 +87,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       // Код отозвали или он исчерпан — возвращаем гостя на экран входа.
       if (error instanceof ApiError && error.status === 401) {
-        storeCode(null);
+        storeEmail(null);
         setAccess(null);
       }
     }

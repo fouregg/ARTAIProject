@@ -11,11 +11,11 @@ JobStage = Literal["queued", "translating", "generating", "done", "error"]
 
 
 class LoginRequest(BaseModel):
-    code: str = Field(min_length=1, max_length=16)
+    email: str = Field(min_length=3, max_length=255)
 
 
 class AccessStateOut(BaseModel):
-    code: str
+    email: str
     limit: int
     used: int
     remaining: int
@@ -32,6 +32,7 @@ class AcceptedDocument(BaseModel):
 
 
 class RegisterRequest(BaseModel):
+    email: str = Field(min_length=3, max_length=255)
     last_name: str = Field(min_length=1, max_length=120)
     first_name: str = Field(min_length=1, max_length=120)
     middle_name: str | None = Field(default=None, max_length=120)

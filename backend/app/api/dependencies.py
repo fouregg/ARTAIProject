@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.config import get_settings
 from app.db import get_session
 from app.models import User
-from app.services.access import get_state, get_user_by_code, normalize_code
+from app.services.access import get_state, get_user_by_email, normalize_email
 from app.services.provod import ProvodClient
 from app.services.registration import get_participant
 
@@ -26,22 +26,22 @@ def get_provod(request: Request) -> ProvodClient:
     return request.app.state.provod
 
 
-async def require_access_code(
-    x_access_code: str = Header(default=""),
+async def require_access_email(
+    x_access_email: str = Header(default=""),
     session: AsyncSession = Depends(get_session),
 ) -> User:
-    """Код доступа приходит заголовком X-Access-Code и одновременно служит паролем."""
-    user = await get_user_by_code(session, normalize_code(x_access_code))
+    """Почта приходит заголовком X-Access-Email и служит единственным признаком участника."""
+    user = await get_user_by_email(session, normalize_email(x_access_email))
     if user is None:
         raise HTTPException(
             status.HTTP_401_UNAUTHORIZED,
-            detail="Код не найден или больше не действует.",
+            detail="Эта почта не зарегистрирована.",
         )
     return user
 
 
 async def require_participant(
-    user: User = Depends(require_access_code),
+    user: User = Depends(require_access_email),
     session: AsyncSession = Depends(get_session),
 ) -> User:
     """Без анкеты и обеих отметок ввод промпта невозможен — требование экрана 1."""
@@ -63,8 +63,7 @@ async def require_quota(
         raise HTTPException(
             status.HTTP_429_TOO_MANY_REQUESTS,
             detail=(
-                f"Генерации по этому коду закончились ({state.used} из {state.limit}). "
-                "Введите другой код."
+                f"Генерации по этой почте закончились ({state.used} из {state.limit})."
             ),
         )
     return user

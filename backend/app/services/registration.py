@@ -7,7 +7,6 @@
 """
 
 import uuid
-from dataclasses import dataclass
 from datetime import date
 
 from sqlalchemy import select
@@ -17,6 +16,7 @@ from app.config import get_settings
 from app.models import Consent, Participant, User
 from app.schemas import RegisterRequest
 from app.services import legal
+from app.services.access import get_or_create_user, is_valid_email, normalize_email
 
 ADULT_AGE = 18
 MAX_AGE = 120
@@ -30,12 +30,6 @@ class RegistrationError(Exception):
         super().__init__(message)
         self.message = message
         self.status = status
-
-
-@dataclass(slots=True)
-class RegistrationResult:
-    participant: Participant
-    session_id: uuid.UUID
 
 
 def age_on(born: date, today: date) -> int:
@@ -86,16 +80,20 @@ async def get_participant(session: AsyncSession, user: User) -> Participant | No
 
 async def register(
     session: AsyncSession,
-    user: User,
     request: RegisterRequest,
     today: date,
-) -> RegistrationResult:
-    existing = await get_participant(session, user)
-    if existing is not None:
-        raise RegistrationError("Анкета для этого кода уже заполнена.", status=409)
+) -> User:
+    """Заводит учётку по почте и анкету к ней. Возвращает учётку участника."""
+    email = normalize_email(request.email)
+    if not is_valid_email(email):
+        raise RegistrationError("Проверьте адрес почты.")
 
     _validate_documents(request)
     _validate_person(request, today)
+
+    user = await get_or_create_user(session, email)
+    if await get_participant(session, user) is not None:
+        raise RegistrationError("Эта почта уже зарегистрирована — просто войдите.", status=409)
 
     participant = Participant(
         user_id=user.id,
@@ -127,6 +125,6 @@ async def register(
         ]
     )
     await session.commit()
-    await session.refresh(participant)
+    await session.refresh(user)
 
-    return RegistrationResult(participant=participant, session_id=session_id)
+    return user
