@@ -1,13 +1,15 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 
-import { domeSocketUrl } from "../api/client";
+import { domeSocketUrl, fetchDomeItems } from "../api/client";
 import type { DomeItem } from "../api/client";
 import { useLegal } from "../api/legalCache";
 
 type ConnectionState = "connecting" | "online" | "offline" | "unauthorized";
 
 const MAX_RECONNECT_DELAY_MS = 15000;
+// Пока сокет не поднялся, коллаж добираем обычными запросами.
+const POLL_INTERVAL_MS = 10000;
 
 /**
  * Раскладка коллажа: строками, а не жёсткой сеткой.
@@ -69,8 +71,24 @@ export default function DomePage() {
 
     closedByUsRef.current = false;
 
+    function scheduleReconnect() {
+      // Экспоненциальная задержка: 1с, 2с, 4с … но не дольше 15 секунд.
+      const delay = Math.min(2 ** retryRef.current * 1000, MAX_RECONNECT_DELAY_MS);
+      retryRef.current += 1;
+      timerRef.current = window.setTimeout(connect, delay);
+    }
+
     function connect() {
-      const socket = new WebSocket(domeSocketUrl(token));
+      let socket: WebSocket;
+      try {
+        socket = new WebSocket(domeSocketUrl(token));
+      } catch {
+        // Конструктор бросает, если сокеты запрещены политикой браузера или прокси.
+        // Роняться нельзя: экран должен остаться на экране и добирать картинки по HTTP.
+        setConnection("offline");
+        scheduleReconnect();
+        return;
+      }
       socketRef.current = socket;
 
       socket.onopen = () => {
@@ -107,10 +125,7 @@ export default function DomePage() {
         }
 
         setConnection("offline");
-        // Экспоненциальная задержка: 1с, 2с, 4с … но не дольше 15 секунд.
-        const delay = Math.min(2 ** retryRef.current * 1000, MAX_RECONNECT_DELAY_MS);
-        retryRef.current += 1;
-        timerRef.current = window.setTimeout(connect, delay);
+        scheduleReconnect();
       };
 
       socket.onerror = () => socket.close();
@@ -124,6 +139,30 @@ export default function DomePage() {
       socketRef.current?.close();
     };
   }, [token]);
+
+  // Запасной канал. На площадке сеть может резать апгрейд до WebSocket — тогда экран
+  // остался бы пустым и незаметно. Пока сокет не в строю, тянем снапшот по HTTP:
+  // обычный GET проходит везде, где вообще работает интернет.
+  useEffect(() => {
+    if (!token || connection === "online" || connection === "unauthorized") return;
+
+    let cancelled = false;
+    async function poll() {
+      try {
+        const snapshot = await fetchDomeItems(token);
+        if (!cancelled) setItems(snapshot);
+      } catch {
+        // Сеть моргнула — следующий тик попробует снова.
+      }
+    }
+
+    poll();
+    const timer = window.setInterval(poll, POLL_INTERVAL_MS);
+    return () => {
+      cancelled = true;
+      window.clearInterval(timer);
+    };
+  }, [token, connection]);
 
   const rows = useMemo(() => {
     const sizes = splitIntoRows(items.length, viewport.width, viewport.height);
@@ -144,7 +183,7 @@ export default function DomePage() {
             ? "Нужен корректный ?token= в адресе экрана"
             : connection === "connecting"
               ? "Подключение…"
-              : "Связь потеряна, переподключаемся…"}
+              : "Прямой канал недоступен, обновляем список запросами"}
         </div>
       )}
 
