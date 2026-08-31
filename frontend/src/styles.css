@@ -300,6 +300,63 @@ textarea.field--prompt {
   color: var(--text);
 }
 
+/* --- мини-полотно: что сейчас на холсте ----------------------------------- */
+
+.canvasview {
+  width: min(660px, 100%);
+  margin-top: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.canvasview__header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.canvasview__page {
+  font-variant-numeric: tabular-nums;
+}
+
+.canvasview__frame {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  aspect-ratio: 16 / 9;
+  padding: 4px;
+  background: #05070c;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 12px 30px rgba(18, 59, 115, 0.12);
+}
+
+.canvasview__row {
+  display: flex;
+  flex: 1 1 0;
+  gap: 2px;
+  min-height: 0;
+}
+
+.canvasview__tile {
+  flex: 1 1 0;
+  min-width: 0;
+  overflow: hidden;
+  border-radius: 2px;
+}
+
+.canvasview__tile img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
 /* --- фирменные знаки ------------------------------------------------------ */
 
 .brand__event {

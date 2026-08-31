@@ -137,6 +137,20 @@ class DomeItemOut(BaseModel):
     created_at: datetime
 
 
+class DomePreviewItemOut(BaseModel):
+    """Для мини-полотна на терминале нужны только картинки, без текстов запросов."""
+
+    id: int
+    thumb_url: str
+
+
+class DomePreviewOut(BaseModel):
+    items: list[DomePreviewItemOut]
+    page: int
+    page_count: int
+    total: int
+
+
 class AdminDomeItemOut(BaseModel):
     """То же, что видит экран, плюс поля, нужные для модерации."""
 

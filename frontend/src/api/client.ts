@@ -126,6 +126,13 @@ export interface AdminDomeItem {
   created_at: string;
 }
 
+export interface DomePreview {
+  items: { id: number; thumb_url: string }[];
+  page: number;
+  page_count: number;
+  total: number;
+}
+
 export class ApiError extends Error {
   constructor(message: string, readonly status: number, readonly code?: string) {
     super(message);
@@ -230,6 +237,10 @@ export function displayOnDome(generationId: string): Promise<DomeItem> {
     method: "POST",
     body: JSON.stringify({ generation_id: generationId }),
   });
+}
+
+export function fetchDomePreview(): Promise<DomePreview> {
+  return request("/api/dome/preview");
 }
 
 export function fetchDomeItems(token: string): Promise<DomeItem[]> {

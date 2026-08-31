@@ -40,6 +40,8 @@ export interface Messages {
   detectedAs: string;
   degraded: string;
   ttlHint: string;
+  canvasNow: string;
+  canvasPage: string;
   codeTitle: string;
   codeSubtitle: string;
   codeSubmit: string;
@@ -77,6 +79,8 @@ export const MESSAGES: Record<UiLanguage, Messages> = {
     detectedAs: "Определён язык",
     degraded: "Перевод не удался — запрос ушёл как есть",
     ttlHint: "Хранится до {time}. Сохраните в галерею или отправьте на цифровой холст, чтобы не удалилось.",
+    canvasNow: "Сейчас на цифровом холсте",
+    canvasPage: "Страница {n} из {m}",
     takesUpTo: "Модель рисует 30–90 секунд — это нормально",
     secondsSuffix: "с",
     codeTitle: "Вход по почте",
@@ -112,6 +116,8 @@ export const MESSAGES: Record<UiLanguage, Messages> = {
     detectedAs: "Detected language",
     degraded: "Translation failed — the original text was used",
     ttlHint: "Kept until {time}. Save it to the gallery or send it to the digital canvas to keep it for good.",
+    canvasNow: "On the digital canvas now",
+    canvasPage: "Page {n} of {m}",
     takesUpTo: "The model takes 30–90 seconds — that is normal",
     secondsSuffix: "s",
     codeTitle: "Sign in with email",
@@ -147,6 +153,8 @@ export const MESSAGES: Record<UiLanguage, Messages> = {
     detectedAs: "识别语言",
     degraded: "翻译失败，已使用原文",
     ttlHint: "保存至 {time}。保存到图库或发送到数字画布即可永久保留。",
+    canvasNow: "数字画布当前展示",
+    canvasPage: "第 {n} 页，共 {m} 页",
     takesUpTo: "模型绘制需要 30–90 秒，属于正常",
     secondsSuffix: "秒",
     codeTitle: "使用邮箱登录",
@@ -182,6 +190,8 @@ export const MESSAGES: Record<UiLanguage, Messages> = {
     detectedAs: "Langue détectée",
     degraded: "Échec de la traduction — le texte original a été utilisé",
     ttlHint: "Conservée jusqu'à {time}. Enregistrez-la dans la galerie ou envoyez-la sur la toile numérique pour la garder.",
+    canvasNow: "En ce moment sur la toile numérique",
+    canvasPage: "Page {n} sur {m}",
     takesUpTo: "Le modèle met 30 à 90 secondes — c'est normal",
     secondsSuffix: "s",
     codeTitle: "Connexion par e-mail",
@@ -217,6 +227,8 @@ export const MESSAGES: Record<UiLanguage, Messages> = {
     detectedAs: "Idioma detectado",
     degraded: "La traducción falló: se usó el texto original",
     ttlHint: "Se conserva hasta las {time}. Guárdala en la galería o envíala al lienzo digital para conservarla.",
+    canvasNow: "Ahora en el lienzo digital",
+    canvasPage: "Página {n} de {m}",
     takesUpTo: "El modelo tarda entre 30 y 90 segundos: es normal",
     secondsSuffix: "s",
     codeTitle: "Entrar con el correo",
@@ -252,6 +264,8 @@ export const MESSAGES: Record<UiLanguage, Messages> = {
     detectedAs: "Idioma detetado",
     degraded: "A tradução falhou — foi usado o texto original",
     ttlHint: "Guardada até às {time}. Guarde na galeria ou envie para a tela digital para a manter.",
+    canvasNow: "Agora na tela digital",
+    canvasPage: "Página {n} de {m}",
     takesUpTo: "O modelo demora 30 a 90 segundos — é normal",
     secondsSuffix: "s",
     codeTitle: "Entrar com o e-mail",
@@ -287,6 +301,8 @@ export const MESSAGES: Record<UiLanguage, Messages> = {
     detectedAs: "اللغة المكتشفة",
     degraded: "تعذّرت الترجمة — استُخدم النص الأصلي",
     ttlHint: "محفوظة حتى {time}. احفظها في المعرض أو أرسلها إلى اللوحة الرقمية للاحتفاظ بها.",
+    canvasNow: "المعروض الآن على اللوحة الرقمية",
+    canvasPage: "صفحة {n} من {m}",
     takesUpTo: "يستغرق النموذج من 30 إلى 90 ثانية — هذا طبيعي",
     secondsSuffix: "ث",
     codeTitle: "الدخول بالبريد الإلكتروني",

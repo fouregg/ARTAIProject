@@ -7,6 +7,7 @@ import { useAuth } from "../auth/AuthContext";
 import AuthModal from "../components/AuthModal";
 import type { AuthTab } from "../components/AuthModal";
 import { BrandFooter, EventLogo } from "../components/BrandMarks";
+import CanvasPreview from "../components/CanvasPreview";
 import LanguageSelect from "../components/LanguageSelect";
 import ResultModal from "../components/ResultModal";
 import { useI18n } from "../i18n/LanguageContext";
@@ -226,6 +227,8 @@ export default function PromptPage() {
           </p>
         )}
       </form>
+
+      <CanvasPreview />
 
       <BrandFooter />
 

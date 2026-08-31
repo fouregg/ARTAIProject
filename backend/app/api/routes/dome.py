@@ -1,5 +1,7 @@
 import logging
+import math
 import secrets
+import time
 
 from fastapi import (
     APIRouter,
@@ -17,13 +19,27 @@ from app.config import get_settings
 from app.db import SessionLocal, get_session
 from app.api.dependencies import require_access_email
 from app.models import DomeItem, Generation, User
-from app.schemas import DomeDisplayRequest, DomeItemOut
+from app.schemas import DomeDisplayRequest, DomeItemOut, DomePreviewItemOut, DomePreviewOut
 from app.services.cleanup import EXPIRED_DETAIL
 from app.services.dome_hub import hub
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["dome"])
+
+# Холст листает страницы по 50 штук раз в минуту. Обе стороны — экран и мини-полотно
+# на терминале — считают номер страницы от одних и тех же часов, иначе миниатюра
+# показывала бы не то, что сейчас висит на стене.
+PAGE_SIZE = 50
+PAGE_INTERVAL_SECONDS = 60
+
+
+def current_page(page_count: int, now: float | None = None) -> int:
+    """Номер текущей страницы, отсчитанный от времени. Нумерация с нуля."""
+    if page_count <= 1:
+        return 0
+    seconds = time.time() if now is None else now
+    return int(seconds // PAGE_INTERVAL_SECONDS) % page_count
 
 
 def require_dome_token(token: str = Query(default="")) -> str:
@@ -78,6 +94,39 @@ async def display_on_dome(
     out = to_out(item, generation)
     await hub.broadcast({"type": "image_added", "item": out.model_dump(mode="json")})
     return out
+
+
+@router.get("/api/dome/preview", response_model=DomePreviewOut)
+async def dome_preview(session: AsyncSession = Depends(get_session)) -> DomePreviewOut:
+    """Что сейчас на холсте — для мини-полотна на экране терминала.
+
+    Без токена: содержимое холста и так висит на стене у всех на виду. Отдаём только
+    картинки текущей страницы, без текстов запросов и без полного списка на тысячи строк.
+    """
+    total = await session.scalar(
+        select(func.count(DomeItem.id)).where(DomeItem.is_visible.is_(True))
+    ) or 0
+    page_count = max(1, math.ceil(total / PAGE_SIZE))
+    page = current_page(page_count)
+
+    rows = await session.execute(
+        select(DomeItem.id, Generation.id)
+        .join(Generation, DomeItem.generation_id == Generation.id)
+        .where(DomeItem.is_visible.is_(True))
+        .order_by(DomeItem.position.asc())
+        .offset(page * PAGE_SIZE)
+        .limit(PAGE_SIZE)
+    )
+
+    return DomePreviewOut(
+        items=[
+            DomePreviewItemOut(id=item_id, thumb_url=f"/api/images/{generation_id}/thumb")
+            for item_id, generation_id in rows.all()
+        ],
+        page=page + 1,
+        page_count=page_count,
+        total=total,
+    )
 
 
 @router.get("/api/dome/items", response_model=list[DomeItemOut])

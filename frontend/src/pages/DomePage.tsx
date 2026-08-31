@@ -4,6 +4,7 @@ import { useSearchParams } from "react-router-dom";
 import { domeSocketUrl, fetchDomeItems } from "../api/client";
 import type { DomeItem } from "../api/client";
 import { useLegal } from "../api/legalCache";
+import { PAGE_SIZE, currentPage, splitIntoRows } from "../lib/collage";
 
 type ConnectionState = "connecting" | "online" | "offline" | "unauthorized";
 
@@ -13,30 +14,7 @@ const POLL_INTERVAL_MS = 10000;
 
 // К концу фестиваля изображений будут тысячи. Показывать их одним полотном нельзя:
 // плитка выродится в точку, а браузер задохнётся от количества картинок. Поэтому
-// холст листает страницы по 50 штук, меняя их раз в минуту.
-const PAGE_SIZE = 50;
-const PAGE_INTERVAL_MS = 60000;
-
-/**
- * Раскладка коллажа: строками, а не жёсткой сеткой.
- *
- * Сетка repeat(N, 1fr) оставляет чёрные дыры, когда число картинок не делится
- * на число колонок. Здесь строки заполняются целиком при любом количестве плиток,
- * а число строк подбирается под пропорции экрана, чтобы плитки не вытягивались.
- */
-function splitIntoRows(count: number, width: number, height: number): number[] {
-  if (count === 0) return [];
-
-  const rows = Math.max(1, Math.round(Math.sqrt((count * height) / Math.max(width, 1))));
-  const base = Math.floor(count / rows);
-  let extra = count % rows;
-
-  return Array.from({ length: rows }, () => {
-    const size = base + (extra > 0 ? 1 : 0);
-    if (extra > 0) extra -= 1;
-    return size;
-  }).filter((size) => size > 0);
-}
+// холст листает страницы по 50 штук, меняя их раз в минуту (см. lib/collage).
 
 /**
  * Экран купола. Открывается на отдельном устройстве в киоск-режиме:
@@ -177,19 +155,11 @@ export default function DomePage() {
 
   const pageCount = Math.max(1, Math.ceil(items.length / PAGE_SIZE));
 
-  // Картинки убрали — текущая страница могла оказаться за концом списка.
+  // Номер страницы считается от часов, а не от таймера с момента загрузки: так экран
+  // и мини-полотно на терминале показывают одно и то же, и перезапуск экрана не сбивает счёт.
   useEffect(() => {
-    if (page >= pageCount) setPage(0);
-  }, [page, pageCount]);
-
-  // Перелистывание. Пока страница одна, таймер не нужен.
-  useEffect(() => {
-    if (pageCount < 2) return;
-
-    const timer = window.setInterval(
-      () => setPage((current) => (current + 1) % pageCount),
-      PAGE_INTERVAL_MS,
-    );
+    setPage(currentPage(pageCount));
+    const timer = window.setInterval(() => setPage(currentPage(pageCount)), 1000);
     return () => window.clearInterval(timer);
   }, [pageCount]);
 
