@@ -40,6 +40,7 @@ export default function PromptPage() {
 
   const stageLabel: Record<JobStage, string> = {
     queued: t.stageQueued,
+    checking: t.stageChecking,
     translating: t.stageTranslating,
     generating: t.stageGenerating,
     done: t.stageGenerating,

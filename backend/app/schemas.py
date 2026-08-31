@@ -7,7 +7,7 @@ from pydantic import BaseModel, ConfigDict, Field
 LanguageChoice = Literal["auto", "ru", "en", "zh", "fr", "es", "pt", "ar"]
 AspectRatio = Literal["1:1", "3:2", "2:3"]
 Quality = Literal["auto", "low", "medium", "high"]
-JobStage = Literal["queued", "translating", "generating", "done", "error"]
+JobStage = Literal["queued", "checking", "translating", "generating", "done", "error"]
 
 
 class LoginRequest(BaseModel):

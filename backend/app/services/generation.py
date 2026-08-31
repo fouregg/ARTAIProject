@@ -12,7 +12,9 @@ from app.db import SessionLocal
 from app.models import Generation, User
 from app.schemas import GenerateRequest, GenerationPayload
 from app.services import storage
+from app.services.legal import REJECTION_NOTICE
 from app.services.jobs import Job, registry
+from app.services.moderation import moderate
 from app.services.provod import ProvodClient, ProvodError
 
 logger = logging.getLogger(__name__)
@@ -80,6 +82,15 @@ async def run_generation_job(
         await session.commit()
 
         try:
+            # Проверка идёт первой и по исходному тексту: перевод мог бы смягчить
+            # формулировку, а платить за генерацию отклонённого запроса незачем.
+            registry.mark_running(job, "checking")
+            verdict = await moderate(client, request.prompt)
+            if not verdict.allowed:
+                generation.moderation_categories = verdict.summary or "unavailable"
+                await _fail(session, generation, job, REJECTION_NOTICE, "MODERATION_BLOCKED")
+                return
+
             if request.skip_translation:
                 # «Сгенерировать снова»: промпт уже английский, второй раз не переводим.
                 prompt_en = request.prompt

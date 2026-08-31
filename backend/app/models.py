@@ -66,6 +66,9 @@ class Generation(Base):
     quality: Mapped[str] = mapped_column(String(16), nullable=False)
     output_format: Mapped[str] = mapped_column(String(8), nullable=False, default="png")
 
+    # Какие категории модерации сработали — по ним отвечают на возражение (п. 8.1).
+    moderation_categories: Mapped[str | None] = mapped_column(String(255), nullable=True)
+
     file_path: Mapped[str | None] = mapped_column(String(512), nullable=True)
     status: Mapped[str] = mapped_column(String(16), nullable=False, default="pending", index=True)
     error: Mapped[str | None] = mapped_column(Text, nullable=True)

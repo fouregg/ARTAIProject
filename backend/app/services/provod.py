@@ -137,6 +137,25 @@ class ProvodClient:
             detected = lang
         return TranslationResult(prompt_en=prompt_en, detected_lang=detected)
 
+    async def classify(self, system_prompt: str, text: str) -> str:
+        """Отдельный вызов для модерации: своя подсказка, свой ответ.
+
+        Намеренно не совмещён с переводом. Если запрос попытается сбить модель
+        указаниями внутри текста, он повлияет только на один из двух вызовов.
+        """
+        payload = {
+            "model": self._settings.moderation_model or self._settings.provod_text_model,
+            "temperature": 0,
+            "response_format": {"type": "json_object"},
+            "messages": [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": f"ЗАПРОС:\n{text}"},
+            ],
+        }
+        data = await self._post("/chat/completions", payload, TRANSLATE_TIMEOUT)
+        content = data["choices"][0]["message"]["content"]
+        return json.dumps(_parse_json_object(content), ensure_ascii=False)
+
     # ---------------------------------------------------------------- generation
 
     async def generate_image(

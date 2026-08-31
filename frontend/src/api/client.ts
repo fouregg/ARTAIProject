@@ -1,7 +1,7 @@
 export type LanguageChoice = "auto" | "ru" | "en" | "zh" | "fr" | "es" | "pt" | "ar";
 export type AspectRatio = "1:1" | "3:2" | "2:3";
 export type Quality = "auto" | "low" | "medium" | "high";
-export type JobStage = "queued" | "translating" | "generating" | "done" | "error";
+export type JobStage = "queued" | "checking" | "translating" | "generating" | "done" | "error";
 
 export interface Generation {
   id: string;

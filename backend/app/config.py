@@ -34,6 +34,14 @@ class Settings(BaseSettings):
     provod_image_model: str = "openai/gpt-image-2"
     provod_text_model: str = "google/gemini-3.1-flash-lite"
 
+    # Проверка запроса до генерации (п. 3.1 Соглашения).
+    moderation_enabled: bool = True
+    # Пусто — берётся модель перевода.
+    moderation_model: str = ""
+    # Классификатор недоступен: пропускать запросы или отклонять. По умолчанию
+    # отклоняем — соглашение описывает модерацию как обязательный шаг.
+    moderation_fail_open: bool = False
+
     database_url: str = "postgresql+asyncpg://artai:artai@localhost:5433/artai"
 
     dome_token: str = "change-me"

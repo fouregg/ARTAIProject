@@ -21,6 +21,7 @@ export interface Messages {
   placeholder: string;
   generate: string;
   stageQueued: string;
+  stageChecking: string;
   stageTranslating: string;
   stageGenerating: string;
   again: string;
@@ -60,6 +61,7 @@ export const MESSAGES: Record<UiLanguage, Messages> = {
     placeholder: "Например: рыжий кот в скафандре на фоне туманности",
     generate: "Сгенерировать",
     stageQueued: "В очереди…",
+    stageChecking: "Проверяем запрос…",
     stageTranslating: "Переводим запрос…",
     stageGenerating: "Рисуем изображение…",
     again: "Сгенерировать снова",
@@ -97,6 +99,7 @@ export const MESSAGES: Record<UiLanguage, Messages> = {
     placeholder: "For example: a ginger cat in a spacesuit against a nebula",
     generate: "Generate",
     stageQueued: "Queued…",
+    stageChecking: "Checking the request…",
     stageTranslating: "Translating the prompt…",
     stageGenerating: "Painting the image…",
     again: "Generate again",
@@ -134,6 +137,7 @@ export const MESSAGES: Record<UiLanguage, Messages> = {
     placeholder: "例如：一只穿着宇航服的橘猫，背景是星云",
     generate: "生成",
     stageQueued: "排队中…",
+    stageChecking: "正在检查请求…",
     stageTranslating: "正在翻译…",
     stageGenerating: "正在绘制…",
     again: "重新生成",
@@ -171,6 +175,7 @@ export const MESSAGES: Record<UiLanguage, Messages> = {
     placeholder: "Par exemple : un chat roux en combinaison spatiale devant une nébuleuse",
     generate: "Générer",
     stageQueued: "En file d'attente…",
+    stageChecking: "Vérification de la requête…",
     stageTranslating: "Traduction de la requête…",
     stageGenerating: "Création de l'image…",
     again: "Générer à nouveau",
@@ -208,6 +213,7 @@ export const MESSAGES: Record<UiLanguage, Messages> = {
     placeholder: "Por ejemplo: un gato naranja con traje espacial frente a una nebulosa",
     generate: "Generar",
     stageQueued: "En cola…",
+    stageChecking: "Comprobando la petición…",
     stageTranslating: "Traduciendo la petición…",
     stageGenerating: "Creando la imagen…",
     again: "Generar de nuevo",
@@ -245,6 +251,7 @@ export const MESSAGES: Record<UiLanguage, Messages> = {
     placeholder: "Por exemplo: um gato ruivo de fato espacial diante de uma nebulosa",
     generate: "Gerar",
     stageQueued: "Na fila…",
+    stageChecking: "A verificar o pedido…",
     stageTranslating: "A traduzir o pedido…",
     stageGenerating: "A criar a imagem…",
     again: "Gerar novamente",
@@ -282,6 +289,7 @@ export const MESSAGES: Record<UiLanguage, Messages> = {
     placeholder: "مثال: قط برتقالي يرتدي بدلة فضاء أمام سديم",
     generate: "إنشاء",
     stageQueued: "في الانتظار…",
+    stageChecking: "جارٍ فحص الطلب…",
     stageTranslating: "جارٍ ترجمة الطلب…",
     stageGenerating: "جارٍ رسم الصورة…",
     again: "إنشاء مرة أخرى",
