@@ -229,11 +229,10 @@ export default function DomePage() {
       {items.length > 0 && (
         <div className="dome__disclosure">
           {legal && <span>{legal.ai_disclosure}</span>}
-          {pageCount > 1 && (
-            <span className="dome__page">
-              Страница {page + 1} из {pageCount}
-            </span>
-          )}
+          {/* Показываем всегда: оператору важно видеть, что холст листается и где он сейчас. */}
+          <span className="dome__page">
+            Страница {page + 1} из {pageCount}
+          </span>
         </div>
       )}
 
