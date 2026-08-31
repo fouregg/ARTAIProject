@@ -105,6 +105,18 @@ export function storeCode(code: string | null): void {
   else localStorage.removeItem(CODE_STORAGE_KEY);
 }
 
+export interface AdminDomeItem {
+  id: number;
+  generation_id: string;
+  url: string;
+  prompt_original: string;
+  prompt_translated: string | null;
+  detected_lang: string | null;
+  is_visible: boolean;
+  position: number;
+  created_at: string;
+}
+
 export class ApiError extends Error {
   constructor(message: string, readonly status: number, readonly code?: string) {
     super(message);
@@ -213,6 +225,26 @@ export function displayOnDome(generationId: string): Promise<DomeItem> {
 
 export function fetchDomeItems(token: string): Promise<DomeItem[]> {
   return request(`/api/dome/items?token=${encodeURIComponent(token)}`);
+}
+
+// --- модерация холста: собственный токен, отдельный от токена экрана ---
+
+export function fetchAdminDome(token: string): Promise<AdminDomeItem[]> {
+  return request(`/api/admin/dome?token=${encodeURIComponent(token)}`);
+}
+
+export function hideDomeItem(token: string, id: number): Promise<AdminDomeItem> {
+  return request(`/api/admin/dome/${id}?token=${encodeURIComponent(token)}`, { method: "DELETE" });
+}
+
+export function restoreDomeItem(token: string, id: number): Promise<AdminDomeItem> {
+  return request(`/api/admin/dome/${id}/restore?token=${encodeURIComponent(token)}`, {
+    method: "POST",
+  });
+}
+
+export function clearDome(token: string): Promise<void> {
+  return request(`/api/admin/dome?token=${encodeURIComponent(token)}`, { method: "DELETE" });
 }
 
 /** ws:// или wss:// подбирается от текущей страницы — работает и в LAN, и через туннель. */

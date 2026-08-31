@@ -109,6 +109,10 @@ export default function DomePage() {
                 : [...current, message.item as DomeItem],
             );
             break;
+          case "image_removed":
+            // Модератор снял плитку — гасим её сразу, не дожидаясь опроса.
+            setItems((current) => current.filter((item) => item.id !== message.id));
+            break;
           case "cleared":
             setItems([]);
             break;

@@ -37,6 +37,8 @@ class Settings(BaseSettings):
     database_url: str = "postgresql+asyncpg://artai:artai@localhost:5433/artai"
 
     dome_token: str = "change-me"
+    # Модерация коллажа — под собственным токеном: токен экрана только показывает.
+    admin_token: str = "change-me-too"
 
     # Идентификатор киоска: попадает в запись акцепта (п. 12.1 Соглашения).
     terminal_id: str = "terminal-1"

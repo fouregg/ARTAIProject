@@ -44,6 +44,7 @@ if [[ -f .env ]]; then
 else
   db_password="$(openssl rand -hex 24)"
   dome_token="$(openssl rand -hex 24)"
+  admin_token="$(openssl rand -hex 24)"
   cat > .env <<ENV
 POSTGRES_USER=artai
 POSTGRES_PASSWORD=${db_password}
@@ -56,6 +57,7 @@ PROVOD_IMAGE_MODEL=openai/gpt-image-2
 PROVOD_TEXT_MODEL=google/gemini-3.1-flash-lite
 
 DOME_TOKEN=${dome_token}
+ADMIN_TOKEN=${admin_token}
 TERMINAL_ID=terminal-1
 
 STORAGE_DIR=/app/storage
@@ -94,7 +96,9 @@ fi
 say "Готово. Осталось вписать ключ provod.ai:"
 echo "  nano /opt/artai/.env      # строка PROVOD_API_KEY"
 echo
-echo "Токен купола для адреса /dome?token=... :"
+echo "Токен экрана для адреса /dome?token=... :"
 grep '^DOME_TOKEN=' /opt/artai/.env
+echo "Токен админки для адреса /admin?token=... :"
+grep '^ADMIN_TOKEN=' /opt/artai/.env
 echo
 echo "После этого достаточно запушить в main — деплой пойдёт сам."

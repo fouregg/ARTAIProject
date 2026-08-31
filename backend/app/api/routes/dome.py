@@ -10,7 +10,7 @@ from fastapi import (
     WebSocketDisconnect,
     status,
 )
-from sqlalchemy import delete, func, select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import get_settings
@@ -34,7 +34,7 @@ def require_dome_token(token: str = Query(default="")) -> str:
     return token
 
 
-def _to_out(item: DomeItem, generation: Generation) -> DomeItemOut:
+def to_out(item: DomeItem, generation: Generation) -> DomeItemOut:
     return DomeItemOut(
         id=item.id,
         generation_id=generation.id,
@@ -52,7 +52,7 @@ async def _load_items(session: AsyncSession) -> list[DomeItemOut]:
         .where(DomeItem.is_visible.is_(True))
         .order_by(DomeItem.position.asc())
     )
-    return [_to_out(item, generation) for item, generation in rows.all()]
+    return [to_out(item, generation) for item, generation in rows.all()]
 
 
 @router.post("/api/dome/display", response_model=DomeItemOut, status_code=status.HTTP_201_CREATED)
@@ -74,7 +74,7 @@ async def display_on_dome(
     await session.commit()
     await session.refresh(item)
 
-    out = _to_out(item, generation)
+    out = to_out(item, generation)
     await hub.broadcast({"type": "image_added", "item": out.model_dump(mode="json")})
     return out
 
@@ -85,16 +85,6 @@ async def list_dome_items(
     session: AsyncSession = Depends(get_session),
 ) -> list[DomeItemOut]:
     return await _load_items(session)
-
-
-@router.delete("/api/dome/items", status_code=status.HTTP_204_NO_CONTENT)
-async def clear_dome(
-    _: str = Depends(require_dome_token),
-    session: AsyncSession = Depends(get_session),
-) -> None:
-    await session.execute(delete(DomeItem))
-    await session.commit()
-    await hub.broadcast({"type": "cleared"})
 
 
 @router.websocket("/ws/dome")

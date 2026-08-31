@@ -744,6 +744,11 @@ h2,
   object-fit: cover;
 }
 
+.gallery__item--hidden img {
+  opacity: 0.45;
+  filter: grayscale(0.6);
+}
+
 .gallery__item figcaption {
   display: flex;
   align-items: center;

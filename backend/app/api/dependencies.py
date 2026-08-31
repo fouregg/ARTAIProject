@@ -1,11 +1,24 @@
-from fastapi import Depends, Header, HTTPException, Request, status
+import secrets
+
+from fastapi import Depends, Header, HTTPException, Query, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.config import get_settings
 from app.db import get_session
 from app.models import User
 from app.services.access import get_state, get_user_by_code, normalize_code
 from app.services.provod import ProvodClient
 from app.services.registration import get_participant
+
+
+def require_admin_token(token: str = Query(default="")) -> str:
+    """Админка открывается по ссылке с токеном, как и сам экран холста."""
+    if not secrets.compare_digest(token, get_settings().admin_token):
+        raise HTTPException(
+            status.HTTP_401_UNAUTHORIZED,
+            detail="Неверный токен администратора.",
+        )
+    return token
 
 
 def get_provod(request: Request) -> ProvodClient:

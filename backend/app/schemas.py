@@ -133,6 +133,20 @@ class DomeItemOut(BaseModel):
     created_at: datetime
 
 
+class AdminDomeItemOut(BaseModel):
+    """То же, что видит экран, плюс поля, нужные для модерации."""
+
+    id: int
+    generation_id: uuid.UUID
+    url: str
+    prompt_original: str
+    prompt_translated: str | None
+    detected_lang: str | None
+    is_visible: bool
+    position: int
+    created_at: datetime
+
+
 class HealthOut(BaseModel):
     status: Literal["ok", "degraded"]
     database: str

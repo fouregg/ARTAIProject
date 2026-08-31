@@ -12,6 +12,7 @@ from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
+from app.api.routes.admin import router as admin_router
 from app.api.routes.auth import router as auth_router
 from app.api.routes.dome import router as dome_router
 from app.api.routes.gallery import router as gallery_router
@@ -62,6 +63,7 @@ def bind_routes(app: FastAPI) -> FastAPI:
     api_router.include_router(router=legal_router)
     api_router.include_router(router=generate_router)
     api_router.include_router(router=gallery_router)
+    api_router.include_router(router=admin_router)
     # Роутер купола держит и websocket, поэтому префикса у него нет.
     api_router.include_router(router=dome_router)
 
