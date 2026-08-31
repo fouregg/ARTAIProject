@@ -73,3 +73,31 @@ async def get_image_file(
         # Файл иммутабелен: имя содержит uuid генерации.
         headers={"Cache-Control": "public, max-age=31536000, immutable"},
     )
+
+
+@router.get("/images/{generation_id}/thumb")
+async def get_image_thumbnail(
+    generation_id: uuid.UUID,
+    session: AsyncSession = Depends(get_session),
+) -> FileResponse:
+    """Лёгкое превью для коллажа и галереи: там плитка меньше оригинала в десятки раз."""
+    generation = await session.get(Generation, generation_id)
+    if generation is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Изображение не найдено.")
+
+    if generation.status == "expired" or not generation.file_path:
+        raise HTTPException(status.HTTP_410_GONE, detail=EXPIRED_DETAIL)
+
+    path = storage.resolve_thumbnail(generation.file_path)
+    if path is None:
+        # Превью не сделалось — отдаём оригинал, экран важнее экономии трафика.
+        path = storage.resolve_path(generation.file_path)
+    if path is None:
+        raise HTTPException(status.HTTP_410_GONE, detail=EXPIRED_DETAIL)
+
+    return FileResponse(
+        path,
+        media_type="image/webp" if path.name.endswith(".webp") else
+        storage.media_type(generation.file_path),
+        headers={"Cache-Control": "public, max-age=31536000, immutable"},
+    )

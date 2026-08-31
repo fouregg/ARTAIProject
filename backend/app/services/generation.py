@@ -40,6 +40,7 @@ def to_payload(generation: Generation) -> GenerationPayload:
     return GenerationPayload(
         id=generation.id,
         url=f"/api/images/{generation.id}/file",
+        thumb_url=f"/api/images/{generation.id}/thumb",
         prompt_original=generation.prompt_original,
         prompt_translated=generation.prompt_translated,
         source_lang=generation.source_lang,

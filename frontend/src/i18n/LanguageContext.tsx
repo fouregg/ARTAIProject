@@ -10,8 +10,6 @@ const STORAGE_KEY = "artai.lang";
 interface LanguageContextValue {
   choice: LanguageChoice;
   setChoice: (choice: LanguageChoice) => void;
-  /** Переключает интерфейс между русским и английским. */
-  toggleLanguage: () => void;
   uiLanguage: UiLanguage;
   t: Messages;
 }
@@ -33,10 +31,6 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
 
   const uiLanguage = useMemo(() => resolveUiLanguage(choice), [choice]);
 
-  const toggleLanguage = useCallback(
-    () => setChoice(resolveUiLanguage(choice) === "ru" ? "en" : "ru"),
-    [choice, setChoice],
-  );
 
   useEffect(() => {
     // Арабский разворачивает весь интерфейс.
@@ -45,8 +39,8 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   }, [uiLanguage]);
 
   const value = useMemo<LanguageContextValue>(
-    () => ({ choice, setChoice, toggleLanguage, uiLanguage, t: MESSAGES[uiLanguage] }),
-    [choice, setChoice, toggleLanguage, uiLanguage],
+    () => ({ choice, setChoice, uiLanguage, t: MESSAGES[uiLanguage] }),
+    [choice, setChoice, uiLanguage],
   );
 
   return <LanguageContext.Provider value={value}>{children}</LanguageContext.Provider>;

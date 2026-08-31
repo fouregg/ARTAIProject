@@ -122,5 +122,6 @@ export const REGISTRATION = { ru: RU, en: EN } as const;
 
 export function useReg(): RegistrationMessages {
   const { uiLanguage } = useI18n();
-  return uiLanguage === "en" ? EN : RU;
+  // Для языков, на которые подписи входа не переводились, английский понятнее русского.
+  return uiLanguage === "ru" ? RU : EN;
 }

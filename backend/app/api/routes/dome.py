@@ -39,6 +39,7 @@ def to_out(item: DomeItem, generation: Generation) -> DomeItemOut:
         id=item.id,
         generation_id=generation.id,
         url=f"/api/images/{generation.id}/file",
+        thumb_url=f"/api/images/{generation.id}/thumb",
         prompt=generation.prompt_translated or generation.prompt_original,
         position=item.position,
         created_at=item.created_at,

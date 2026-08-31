@@ -11,6 +11,12 @@ const MAX_RECONNECT_DELAY_MS = 15000;
 // Пока сокет не поднялся, коллаж добираем обычными запросами.
 const POLL_INTERVAL_MS = 10000;
 
+// К концу фестиваля изображений будут тысячи. Показывать их одним полотном нельзя:
+// плитка выродится в точку, а браузер задохнётся от количества картинок. Поэтому
+// холст листает страницы по 50 штук, меняя их раз в минуту.
+const PAGE_SIZE = 50;
+const PAGE_INTERVAL_MS = 60000;
+
 /**
  * Раскладка коллажа: строками, а не жёсткой сеткой.
  *
@@ -44,6 +50,7 @@ export default function DomePage() {
   const legal = useLegal();
 
   const [items, setItems] = useState<DomeItem[]>([]);
+  const [page, setPage] = useState(0);
   const [connection, setConnection] = useState<ConnectionState>("connecting");
   const [viewport, setViewport] = useState({
     width: window.innerWidth,
@@ -168,16 +175,39 @@ export default function DomePage() {
     };
   }, [token, connection]);
 
+  const pageCount = Math.max(1, Math.ceil(items.length / PAGE_SIZE));
+
+  // Картинки убрали — текущая страница могла оказаться за концом списка.
+  useEffect(() => {
+    if (page >= pageCount) setPage(0);
+  }, [page, pageCount]);
+
+  // Перелистывание. Пока страница одна, таймер не нужен.
+  useEffect(() => {
+    if (pageCount < 2) return;
+
+    const timer = window.setInterval(
+      () => setPage((current) => (current + 1) % pageCount),
+      PAGE_INTERVAL_MS,
+    );
+    return () => window.clearInterval(timer);
+  }, [pageCount]);
+
+  const pageItems = useMemo(
+    () => items.slice(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE),
+    [items, page],
+  );
+
   const rows = useMemo(() => {
-    const sizes = splitIntoRows(items.length, viewport.width, viewport.height);
+    const sizes = splitIntoRows(pageItems.length, viewport.width, viewport.height);
     const result: DomeItem[][] = [];
     let offset = 0;
     for (const size of sizes) {
-      result.push(items.slice(offset, offset + size));
+      result.push(pageItems.slice(offset, offset + size));
       offset += size;
     }
     return result;
-  }, [items, viewport.width, viewport.height]);
+  }, [pageItems, viewport.width, viewport.height]);
 
   return (
     <div className="dome">
@@ -196,14 +226,23 @@ export default function DomePage() {
       )}
 
       {/* Маркировка обязательна и на экспозиционном экране. */}
-      {legal && items.length > 0 && <div className="dome__disclosure">{legal.ai_disclosure}</div>}
+      {items.length > 0 && (
+        <div className="dome__disclosure">
+          {legal && <span>{legal.ai_disclosure}</span>}
+          {pageCount > 1 && (
+            <span className="dome__page">
+              Страница {page + 1} из {pageCount}
+            </span>
+          )}
+        </div>
+      )}
 
       <div className="dome__collage">
         {rows.map((row, index) => (
-          <div className="dome__row" key={index}>
+          <div className="dome__row" key={`${page}-${index}`}>
             {row.map((item) => (
               <div className="dome__tile" key={item.id}>
-                <img src={item.url} alt="" />
+                <img src={item.thumb_url} alt="" />
               </div>
             ))}
           </div>

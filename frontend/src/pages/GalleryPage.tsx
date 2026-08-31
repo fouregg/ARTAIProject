@@ -63,7 +63,7 @@ export default function GalleryPage() {
       <div className="gallery">
         {(items ?? []).map((item) => (
           <figure className="gallery__item" key={item.id}>
-            <img src={item.url} alt={item.prompt_original} loading="lazy" />
+            <img src={item.thumb_url} alt={item.prompt_original} loading="lazy" />
             <figcaption>
               <span>{item.prompt_original}</span>
               <button type="button" className="btn btn--small" onClick={() => handleDelete(item.id)}>

@@ -83,6 +83,7 @@ class GenerationPayload(BaseModel):
 
     id: uuid.UUID
     url: str
+    thumb_url: str
     prompt_original: str
     prompt_translated: str | None
     source_lang: str | None
@@ -113,6 +114,7 @@ class GalleryItemOut(BaseModel):
     id: int
     generation_id: uuid.UUID
     url: str
+    thumb_url: str
     title: str | None
     prompt_original: str
     prompt_translated: str | None
@@ -128,6 +130,7 @@ class DomeItemOut(BaseModel):
     id: int
     generation_id: uuid.UUID
     url: str
+    thumb_url: str
     prompt: str
     position: int
     created_at: datetime
@@ -139,6 +142,7 @@ class AdminDomeItemOut(BaseModel):
     id: int
     generation_id: uuid.UUID
     url: str
+    thumb_url: str
     prompt_original: str
     prompt_translated: str | None
     detected_lang: str | None

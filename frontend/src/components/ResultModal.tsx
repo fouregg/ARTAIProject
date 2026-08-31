@@ -12,6 +12,7 @@ interface Props {
   elapsedSeconds: number;
   canRegenerate: boolean;
   onRegenerate: () => void;
+  onEditPrompt: () => void;
   onClose: () => void;
 }
 
@@ -21,6 +22,7 @@ export default function ResultModal({
   elapsedSeconds,
   canRegenerate,
   onRegenerate,
+  onEditPrompt,
   onClose,
 }: Props) {
   const { t, uiLanguage } = useI18n();
@@ -146,6 +148,9 @@ export default function ResultModal({
             disabled={displayed || displayPending || regenerating}
           >
             {displayed ? t.displayed : t.display}
+          </button>
+          <button type="button" className="btn" onClick={onEditPrompt} disabled={regenerating}>
+            {t.editPrompt}
           </button>
         </div>
       </div>

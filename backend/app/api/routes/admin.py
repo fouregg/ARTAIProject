@@ -25,6 +25,7 @@ def _to_out(item: DomeItem, generation: Generation) -> AdminDomeItemOut:
         id=item.id,
         generation_id=generation.id,
         url=f"/api/images/{generation.id}/file",
+        thumb_url=f"/api/images/{generation.id}/thumb",
         prompt_original=generation.prompt_original,
         prompt_translated=generation.prompt_translated,
         detected_lang=generation.detected_lang,

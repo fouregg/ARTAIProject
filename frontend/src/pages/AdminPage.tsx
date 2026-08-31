@@ -97,7 +97,7 @@ export default function AdminPage() {
       <div className="gallery">
         {visible.map((item) => (
           <figure className="gallery__item" key={item.id}>
-            <img src={item.url} alt={item.prompt_original} loading="lazy" />
+            <img src={item.thumb_url} alt={item.prompt_original} loading="lazy" />
             <figcaption>
               <span title={item.prompt_original}>{item.prompt_original}</span>
               <button
@@ -123,7 +123,7 @@ export default function AdminPage() {
           <div className="gallery">
             {hidden.map((item) => (
               <figure className="gallery__item gallery__item--hidden" key={item.id}>
-                <img src={item.url} alt={item.prompt_original} loading="lazy" />
+                <img src={item.thumb_url} alt={item.prompt_original} loading="lazy" />
                 <figcaption>
                   <span title={item.prompt_original}>{item.prompt_original}</span>
                   <button

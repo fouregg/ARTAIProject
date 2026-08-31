@@ -24,6 +24,7 @@ export interface Messages {
   stageTranslating: string;
   stageGenerating: string;
   again: string;
+  editPrompt: string;
   save: string;
   saved: string;
   display: string;
@@ -60,6 +61,7 @@ export const MESSAGES: Record<UiLanguage, Messages> = {
     stageTranslating: "Переводим запрос…",
     stageGenerating: "Рисуем изображение…",
     again: "Сгенерировать снова",
+    editPrompt: "Изменить промпт",
     save: "Сохранить в галерею",
     saved: "Сохранено ✓",
     display: "Отобразить на цифровом холсте",
@@ -94,6 +96,7 @@ export const MESSAGES: Record<UiLanguage, Messages> = {
     stageTranslating: "Translating the prompt…",
     stageGenerating: "Painting the image…",
     again: "Generate again",
+    editPrompt: "Edit the prompt",
     save: "Save to gallery",
     saved: "Saved ✓",
     display: "Show on the digital canvas",
@@ -128,6 +131,7 @@ export const MESSAGES: Record<UiLanguage, Messages> = {
     stageTranslating: "正在翻译…",
     stageGenerating: "正在绘制…",
     again: "重新生成",
+    editPrompt: "修改提示词",
     save: "保存到图库",
     saved: "已保存 ✓",
     display: "显示在数字画布上",
@@ -162,6 +166,7 @@ export const MESSAGES: Record<UiLanguage, Messages> = {
     stageTranslating: "Traduction de la requête…",
     stageGenerating: "Création de l'image…",
     again: "Générer à nouveau",
+    editPrompt: "Modifier la requête",
     save: "Enregistrer dans la galerie",
     saved: "Enregistré ✓",
     display: "Afficher sur la toile numérique",
@@ -196,6 +201,7 @@ export const MESSAGES: Record<UiLanguage, Messages> = {
     stageTranslating: "Traduciendo la petición…",
     stageGenerating: "Creando la imagen…",
     again: "Generar de nuevo",
+    editPrompt: "Editar la petición",
     save: "Guardar en la galería",
     saved: "Guardado ✓",
     display: "Mostrar en el lienzo digital",
@@ -230,6 +236,7 @@ export const MESSAGES: Record<UiLanguage, Messages> = {
     stageTranslating: "A traduzir o pedido…",
     stageGenerating: "A criar a imagem…",
     again: "Gerar novamente",
+    editPrompt: "Editar o pedido",
     save: "Guardar na galeria",
     saved: "Guardado ✓",
     display: "Mostrar na tela digital",
@@ -264,6 +271,7 @@ export const MESSAGES: Record<UiLanguage, Messages> = {
     stageTranslating: "جارٍ ترجمة الطلب…",
     stageGenerating: "جارٍ رسم الصورة…",
     again: "إنشاء مرة أخرى",
+    editPrompt: "تعديل الطلب",
     save: "حفظ في المعرض",
     saved: "تم الحفظ ✓",
     display: "العرض على اللوحة الرقمية",

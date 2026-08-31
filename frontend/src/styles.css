@@ -152,6 +152,13 @@ h2,
   border-radius: 14px;
 }
 
+textarea.field--prompt {
+  min-height: 132px;
+  resize: vertical;
+  line-height: 1.5;
+  text-align: start;
+}
+
 .field--code {
   font-size: 2rem;
   letter-spacing: 0.5em;
@@ -184,6 +191,80 @@ h2,
 
 .stage .error {
   text-align: center;
+}
+
+/* --- выбор языка ---------------------------------------------------------- */
+
+.langselect {
+  position: relative;
+}
+
+.langselect__button,
+.langselect__option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 7px 12px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface-2);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.langselect__flag {
+  width: 22px;
+  height: 16px;
+  object-fit: cover;
+  border-radius: 2px;
+  flex: none;
+  box-shadow: 0 0 0 1px rgba(18, 59, 115, 0.15);
+}
+
+.langselect__caret {
+  color: var(--muted);
+  font-size: 0.7rem;
+}
+
+.langselect__list {
+  position: absolute;
+  top: calc(100% + 6px);
+  inset-inline-end: 0;
+  z-index: 20;
+  min-width: 190px;
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: 0 18px 40px rgba(18, 59, 115, 0.16);
+}
+
+.langselect__option {
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  text-align: start;
+}
+
+.langselect__option:hover {
+  background: rgba(18, 59, 115, 0.07);
+}
+
+.langselect__option--active {
+  background: var(--blue);
+  color: var(--cream);
+  font-weight: 600;
+}
+
+.dome__page {
+  color: rgba(255, 255, 255, 0.9);
+  font-variant-numeric: tabular-nums;
 }
 
 /* --- тумблер языка -------------------------------------------------------- */
@@ -449,6 +530,10 @@ h2,
   bottom: 14px;
   inset-inline: 0;
   z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
   text-align: center;
   color: rgba(255, 255, 255, 0.75);
   font-size: 0.9rem;

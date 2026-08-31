@@ -6,6 +6,8 @@ export type JobStage = "queued" | "translating" | "generating" | "done" | "error
 export interface Generation {
   id: string;
   url: string;
+  /** Лёгкое превью: коллаж и галерея берут его вместо оригинала. */
+  thumb_url: string;
   prompt_original: string;
   prompt_translated: string | null;
   source_lang: string | null;
@@ -40,6 +42,8 @@ export interface GalleryItem {
   id: number;
   generation_id: string;
   url: string;
+  /** Лёгкое превью: коллаж и галерея берут его вместо оригинала. */
+  thumb_url: string;
   title: string | null;
   prompt_original: string;
   prompt_translated: string | null;
@@ -51,6 +55,8 @@ export interface DomeItem {
   id: number;
   generation_id: string;
   url: string;
+  /** Лёгкое превью: коллаж и галерея берут его вместо оригинала. */
+  thumb_url: string;
   prompt: string;
   position: number;
   created_at: string;
@@ -109,6 +115,8 @@ export interface AdminDomeItem {
   id: number;
   generation_id: string;
   url: string;
+  /** Лёгкое превью: коллаж и галерея берут его вместо оригинала. */
+  thumb_url: string;
   prompt_original: string;
   prompt_translated: string | null;
   detected_lang: string | null;

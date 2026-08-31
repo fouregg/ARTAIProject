@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 
 import { ApiError, startGeneration, waitForGeneration } from "../api/client";
@@ -7,6 +7,7 @@ import { useAuth } from "../auth/AuthContext";
 import AuthModal from "../components/AuthModal";
 import type { AuthTab } from "../components/AuthModal";
 import { BrandFooter, EventLogo } from "../components/BrandMarks";
+import LanguageSelect from "../components/LanguageSelect";
 import ResultModal from "../components/ResultModal";
 import { useI18n } from "../i18n/LanguageContext";
 import { useReg } from "../i18n/registration";
@@ -17,7 +18,7 @@ const ASPECT_RATIO = "1:1";
 const QUALITY = "low";
 
 export default function PromptPage() {
-  const { t, uiLanguage, toggleLanguage } = useI18n();
+  const { t } = useI18n();
   const REG = useReg();
   const { access, signOut, refresh } = useAuth();
 
@@ -30,6 +31,7 @@ export default function PromptPage() {
   const [elapsed, setElapsed] = useState(0);
   const [authTab, setAuthTab] = useState<AuthTab | null>(null);
   const [authNotice, setAuthNotice] = useState<string | null>(null);
+  const promptRef = useRef<HTMLTextAreaElement>(null);
 
   // Экран ввода открыт всем; код спрашиваем только в момент отправки запроса.
   const authorized = access !== null && access.registered;
@@ -140,17 +142,7 @@ export default function PromptPage() {
         <EventLogo />
 
         <div className="topbar__actions">
-          {/* Тумблер языка интерфейса: подписи меняются, промпт по-прежнему на любом языке. */}
-          <button
-            type="button"
-            className="langtoggle"
-            onClick={toggleLanguage}
-            aria-label={uiLanguage === "ru" ? "Switch to English" : "Переключить на русский"}
-            title={uiLanguage === "ru" ? "Switch to English" : "Переключить на русский"}
-          >
-            <span className={uiLanguage === "ru" ? "langtoggle__on" : undefined}>RU</span>
-            <span className={uiLanguage === "en" ? "langtoggle__on" : undefined}>EN</span>
-          </button>
+          <LanguageSelect />
 
           {/* Галерея — только для вошедших: гостю там смотреть нечего. */}
           {authorized && (
@@ -183,16 +175,25 @@ export default function PromptPage() {
         <h1 className="stage__title">{t.title}</h1>
         <p className="stage__subtitle">{t.subtitle}</p>
 
-        <input
+        <textarea
           className="field field--prompt"
+          ref={promptRef}
           value={prompt}
           onChange={(event) => setPrompt(event.target.value)}
           placeholder={t.placeholder}
           maxLength={2000}
+          rows={4}
           autoFocus
           // Гость может писать на арабском — направление текста определяем по содержимому.
           dir="auto"
           disabled={busy || exhausted}
+          onKeyDown={(event) => {
+            // Enter отправляет, Shift+Enter переносит строку — привычно для поля запроса.
+            if (event.key === "Enter" && !event.shiftKey) {
+              event.preventDefault();
+              void handleSubmit(event);
+            }
+          }}
         />
 
         <button
@@ -245,6 +246,11 @@ export default function PromptPage() {
           elapsedSeconds={elapsed}
           canRegenerate={!exhausted}
           onRegenerate={handleRegenerate}
+          onEditPrompt={() => {
+            // Текст запроса из поля не стирается, поэтому достаточно вернуть в него курсор.
+            setGeneration(null);
+            window.setTimeout(() => promptRef.current?.focus(), 0);
+          }}
           onClose={() => setGeneration(null)}
         />
       )}
