@@ -205,7 +205,7 @@ https://<выданный-домен>/dome?token=<DOME_TOKEN>
 
 Категории заданы в [`services/moderation.py`](backend/app/services/moderation.py):
 `adult`, `profanity`, `gore`, `war`, `racism`, `children`, `disaster`, `ua_svo`,
-`scatology`, `substances`. Формулировки там — часть настройки: правя описание категории,
+`scatology`, `substances`, `drugs`, `destitution`. Формулировки там — часть настройки: правя описание категории,
 вы меняете поведение модерации.
 
 В стоп-листе строка вида `[код]` переключает категорию для идущих ниже слов,
