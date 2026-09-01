@@ -95,7 +95,7 @@ jobs:
       - name: Проверка здоровья
         run: |
           for attempt in $(seq 1 20); do
-            body=$(curl -fsS --max-time 10 "http://${{ secrets.DEPLOY_HOST }}/api/health" || true)
+            body=$(curl -fsSL --max-time 10 "https://${{ secrets.DEPLOY_HOST }}/api/health" || true)
             if echo "$body" | grep -q '"database":"ok"'; then
               echo "Сервис отвечает: $body"
               exit 0

@@ -8,9 +8,9 @@ push в main
    ↓
 build:  docker build (фронт внутри) → ghcr.io/fouregg/artaiproject:<sha> и :latest
    ↓
-deploy: ssh root@159.194.206.14 → docker compose pull && up -d
+deploy: ssh root@ai.tavrida.art → docker compose pull && up -d
    ↓
-проверка http://159.194.206.14/api/health
+проверка https://ai.tavrida.art/api/health
 ```
 
 ## Первичная настройка сервера
@@ -37,12 +37,12 @@ nano /opt/artai/.env      # PROVOD_API_KEY=sk_...
 
 | Секрет | Значение |
 |---|---|
-| `DEPLOY_HOST` | `159.194.206.14` |
+| `DEPLOY_HOST` | `ai.tavrida.art` |
 | `DEPLOY_USER` | `root` |
 | `DEPLOY_SSH_KEY` | приватный ключ `/root/.ssh/artai_deploy` целиком, с обеими строками `-----BEGIN/END-----` |
 
 ```bash
-gh secret set DEPLOY_HOST --body "159.194.206.14"
+gh secret set DEPLOY_HOST --body "ai.tavrida.art"
 gh secret set DEPLOY_USER --body "root"
 gh secret set DEPLOY_SSH_KEY < artai_deploy
 ```
@@ -61,7 +61,7 @@ gh secret set DEPLOY_SSH_KEY < artai_deploy
 ## Откат
 
 ```bash
-ssh root@159.194.206.14
+ssh root@ai.tavrida.art
 cd /opt/artai
 docker compose images app                       # какой тег сейчас
 sed -i 's|^APP_IMAGE=.*|APP_IMAGE=ghcr.io/fouregg/artaiproject:<нужный-sha>|' .env
@@ -80,10 +80,24 @@ docker compose exec postgres psql -U artai -d artai   # база
 docker compose restart app
 ```
 
-## Пока без HTTPS
+## HTTPS
 
-Сейчас приложение слушает 80-й порт по IP. Это осознанный временный режим, но помните:
-коды доступа и анкеты с персональными данными идут по открытому каналу. Когда появится
-домен, схема такая — добавить перед приложением nginx с Let's Encrypt, порт приложения
-убрать из публичного доступа (`ports: ["127.0.0.1:8000:8000"]`) и открыть 443. Фронтенд
-сам переключит сокет купола на `wss://`, править код не нужно.
+Наружу смотрит nginx (`deploy/nginx.conf`), приложение публичного порта не имеет —
+только внутренняя сеть compose. С 80-го идёт редирект на 443, кроме пути проверки
+Let's Encrypt. Сокет цифрового холста проксируется с апгрейдом, таймаут чтения час:
+экран висит на связи сутками, а генерация занимает до полутора минут.
+
+Сертификат выпущен на `ai.tavrida.art`. Контейнер `certbot` дважды в сутки пробует
+продлить его методом webroot; Let's Encrypt обновляет за месяц до конца срока.
+
+```bash
+# что с сертификатом
+docker compose run --rm --entrypoint certbot certbot certificates
+
+# продлить вручную и перечитать конфиг
+docker compose run --rm --entrypoint certbot certbot renew --webroot -w /var/www/certbot
+docker compose exec nginx nginx -s reload
+```
+
+Первый выпуск делался в режиме standalone при остановленном приложении — 80-й порт
+должен быть свободен. Продление так не работает: оно идёт через nginx и простоя не требует.
