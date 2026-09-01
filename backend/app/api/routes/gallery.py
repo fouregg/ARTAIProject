@@ -32,13 +32,19 @@ async def add_to_gallery(
     session: AsyncSession = Depends(get_session),
 ) -> GalleryItemOut:
     generation = await session.get(Generation, payload.generation_id)
-    if generation is None:
+    # Чужую генерацию сохранять нельзя. Кроме приватности тут есть и практическая
+    # причина: generation_id уникален в gallery_items, и первый сохранивший занял бы
+    # чужую картинку так, что владелец уже не смог бы добавить её себе.
+    if generation is None or generation.user_id != user.id:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Изображение не найдено.")
     if generation.status != "done" or not generation.file_path:
         raise HTTPException(status.HTTP_410_GONE, detail=EXPIRED_DETAIL)
 
     existing = await session.scalar(
-        select(GalleryItem).where(GalleryItem.generation_id == generation.id)
+        select(GalleryItem).where(
+            GalleryItem.generation_id == generation.id,
+            GalleryItem.user_id == user.id,
+        )
     )
     if existing is not None:
         # Повторное нажатие кнопки — не ошибка, просто возвращаем что уже есть.
@@ -55,11 +61,14 @@ async def add_to_gallery(
 async def list_gallery(
     limit: int = Query(50, ge=1, le=200),
     offset: int = Query(0, ge=0),
+    user: User = Depends(require_access_email),
     session: AsyncSession = Depends(get_session),
 ) -> list[GalleryItemOut]:
+    """Галерея личная: гость видит только то, что сохранил сам."""
     rows = await session.execute(
         select(GalleryItem, Generation)
         .join(Generation, GalleryItem.generation_id == Generation.id)
+        .where(GalleryItem.user_id == user.id)
         .order_by(GalleryItem.created_at.desc())
         .limit(limit)
         .offset(offset)
@@ -70,10 +79,12 @@ async def list_gallery(
 @router.delete("/{item_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_gallery_item(
     item_id: int,
+    user: User = Depends(require_access_email),
     session: AsyncSession = Depends(get_session),
 ) -> None:
     item = await session.get(GalleryItem, item_id)
-    if item is None:
+    # Чужую запись не показываем и не выдаём её существование: тот же 404.
+    if item is None or item.user_id != user.id:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Элемент галереи не найден.")
 
     # Файл не трогаем: генерация может висеть на куполе, а если нет —
