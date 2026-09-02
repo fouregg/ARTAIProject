@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import ASPECT_PRESETS, get_settings
 from app.db import SessionLocal
-from app.models import Generation, User
+from app.models import GalleryItem, Generation, User
 from app.schemas import GenerateRequest, GenerationPayload
 from app.services import storage
 from app.services.legal import REJECTION_NOTICE
@@ -117,6 +117,11 @@ async def run_generation_job(
 
             generation.file_path = storage.save_image(image_bytes, generation_id, "png")
             generation.status = "done"
+
+            # Кладём в галерею сразу: иначе обновление страницы теряет работу.
+            # is_auto=True — такая запись не удерживает файл от уборки, срок хранения
+            # продолжает действовать, пока гость не сохранит картинку сам.
+            session.add(GalleryItem(generation_id=generation.id, user_id=user_id, is_auto=True))
             await session.commit()
             await session.refresh(generation)
 

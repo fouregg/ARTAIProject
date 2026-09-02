@@ -34,7 +34,10 @@ async def sweep_expired_images() -> int:
     cutoff = datetime.now(timezone.utc) - timedelta(minutes=settings.image_ttl_minutes)
 
     pinned_to_dome = exists().where(DomeItem.generation_id == Generation.id)
-    pinned_to_gallery = exists().where(GalleryItem.generation_id == Generation.id)
+    pinned_to_gallery = exists().where(
+        GalleryItem.generation_id == Generation.id,
+        GalleryItem.is_auto.is_(False),
+    )
 
     async with SessionLocal() as session:
         expired = (

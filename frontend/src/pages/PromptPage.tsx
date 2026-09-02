@@ -29,6 +29,8 @@ export default function PromptPage() {
   const [regenerating, setRegenerating] = useState(false);
   const [generation, setGeneration] = useState<Generation | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // Отказ модерации — не поломка, а подсказка: показываем его без приставки «Не получилось».
+  const [rejected, setRejected] = useState(false);
   const [elapsed, setElapsed] = useState(0);
   const [authTab, setAuthTab] = useState<AuthTab | null>(null);
   const [authNotice, setAuthNotice] = useState<string | null>(null);
@@ -99,11 +101,13 @@ export default function PromptPage() {
 
     setBusy(true);
     setError(null);
+    setRejected(false);
     setAuthNotice(null);
     setStage("queued");
     try {
       setGeneration(await runGeneration({ prompt: text, skipTranslation: false }));
     } catch (caught) {
+      setRejected(caught instanceof ApiError && caught.code === "MODERATION_BLOCKED");
       setError(caught instanceof ApiError ? caught.message : String(caught));
     } finally {
       setBusy(false);
@@ -118,6 +122,7 @@ export default function PromptPage() {
 
     setRegenerating(true);
     setError(null);
+    setRejected(false);
     try {
       // Промпт уже на английском — перевод не повторяем, экономим вызов модели.
       // Исходный текст пользователя передаём отдельно: он остаётся и в журнале, и в модалке.
@@ -130,6 +135,7 @@ export default function PromptPage() {
         }),
       );
     } catch (caught) {
+      setRejected(caught instanceof ApiError && caught.code === "MODERATION_BLOCKED");
       setError(caught instanceof ApiError ? caught.message : String(caught));
     } finally {
       setRegenerating(false);
@@ -222,11 +228,14 @@ export default function PromptPage() {
 
         {exhausted && <p className="error">{t.exhausted}</p>}
 
-        {error && (
-          <p className="error">
-            <strong>{t.errorTitle}:</strong> {error}
-          </p>
-        )}
+        {error &&
+          (rejected ? (
+            <p className="notice">{error}</p>
+          ) : (
+            <p className="error">
+              <strong>{t.errorTitle}:</strong> {error}
+            </p>
+          ))}
       </form>
 
       <CanvasPreview />

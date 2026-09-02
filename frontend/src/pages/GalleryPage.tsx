@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, Navigate } from "react-router-dom";
 
-import { ApiError, deleteGalleryItem, fetchGallery } from "../api/client";
+import { ApiError, deleteGalleryItem, displayOnDome, fetchGallery } from "../api/client";
 import type { GalleryItem } from "../api/client";
 import { useAuth } from "../auth/AuthContext";
 import { BrandFooter, EventLogo } from "../components/BrandMarks";
@@ -12,6 +12,7 @@ export default function GalleryPage() {
   const { access, checking } = useAuth();
   const [items, setItems] = useState<GalleryItem[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [sendingId, setSendingId] = useState<number | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -27,6 +28,22 @@ export default function GalleryPage() {
       cancelled = true;
     };
   }, []);
+
+  async function handleDisplay(item: GalleryItem) {
+    setSendingId(item.id);
+    setError(null);
+    try {
+      await displayOnDome(item.generation_id);
+      // Отмечаем локально: перезапрашивать весь список ради одного флага незачем.
+      setItems((current) =>
+        (current ?? []).map((row) => (row.id === item.id ? { ...row, on_canvas: true } : row)),
+      );
+    } catch (caught) {
+      setError(caught instanceof ApiError ? caught.message : String(caught));
+    } finally {
+      setSendingId(null);
+    }
+  }
 
   async function handleDelete(id: number) {
     try {
@@ -65,10 +82,24 @@ export default function GalleryPage() {
           <figure className="gallery__item" key={item.id}>
             <img src={item.thumb_url} alt={item.prompt_original} loading="lazy" />
             <figcaption>
-              <span>{item.prompt_original}</span>
-              <button type="button" className="btn btn--small" onClick={() => handleDelete(item.id)}>
-                {t.delete}
-              </button>
+              <span title={item.prompt_original}>{item.prompt_original}</span>
+              <div className="gallery__actions">
+                <button
+                  type="button"
+                  className="btn btn--small btn--primary"
+                  onClick={() => void handleDisplay(item)}
+                  disabled={item.on_canvas || sendingId === item.id}
+                >
+                  {item.on_canvas ? t.displayed : t.display}
+                </button>
+                <button
+                  type="button"
+                  className="btn btn--small"
+                  onClick={() => void handleDelete(item.id)}
+                >
+                  {t.delete}
+                </button>
+              </div>
             </figcaption>
           </figure>
         ))}

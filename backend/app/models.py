@@ -88,6 +88,9 @@ class GalleryItem(Base):
     )
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
     title: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    # True — картинка попала в галерею сама, сразу после генерации. Такие записи
+    # не удерживают файл от уборки: иначе срок хранения перестал бы работать вовсе.
+    is_auto: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     created_at: Mapped[datetime] = _now_column()
 
     generation: Mapped[Generation] = relationship()

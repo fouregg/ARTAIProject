@@ -32,6 +32,11 @@ export function BrandFooter() {
   return (
     <footer className="brandbar">
       <img
+        className="brandbar__mark brandbar__mark--tall"
+        src="/brand/exhibition.webp"
+        alt={english ? "International Exhibition of Young Artists" : "Международная выставка молодых художников"}
+      />
+      <img
         className="brandbar__mark"
         src={english ? "/brand/tavrida-en.svg" : "/brand/tavrida.webp"}
         alt={english ? "Tavrida.Art" : "Таврида.Арт"}

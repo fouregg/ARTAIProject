@@ -113,6 +113,8 @@ class GalleryAddRequest(BaseModel):
 
 class GalleryItemOut(BaseModel):
     id: int
+    # Уже отправлена на цифровой холст — кнопка в галерее показывает это состояние.
+    on_canvas: bool
     generation_id: uuid.UUID
     url: str
     thumb_url: str

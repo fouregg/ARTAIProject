@@ -40,6 +40,8 @@ export interface GenerateParams {
 
 export interface GalleryItem {
   id: number;
+  /** Уже отправлена на цифровой холст. */
+  on_canvas: boolean;
   generation_id: string;
   url: string;
   /** Лёгкое превью: коллаж и галерея берут его вместо оригинала. */

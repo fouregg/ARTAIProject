@@ -394,6 +394,11 @@ textarea.field--prompt {
   height: 54px;
 }
 
+/* Знак выставки вертикальный: при общей высоте подписи под ним не читаются. */
+.brandbar__mark--tall {
+  height: 96px;
+}
+
 @media (max-height: 720px) {
   .brandbar {
     position: static;
@@ -467,6 +472,10 @@ textarea.field--prompt {
 
   .brandbar__mark--wide {
     height: 32px;
+  }
+
+  .brandbar__mark--tall {
+    height: 62px;
   }
 
   .modal {
@@ -953,7 +962,7 @@ textarea.field--prompt {
 
 .gallery {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
   gap: 14px;
   margin-top: 20px;
 }
@@ -980,15 +989,28 @@ textarea.field--prompt {
 
 .gallery__item figcaption {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  flex-direction: column;
+  align-items: stretch;
   gap: 8px;
   padding: 10px;
   font-size: 0.8rem;
   color: var(--muted);
 }
 
+/* Подпись «Отобразить на цифровом холсте» длинная: в ряд она ломается на четыре
+   строки, поэтому кнопки идут столбиком во всю ширину карточки. */
+.gallery__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.gallery__actions .btn {
+  width: 100%;
+}
+
 .gallery__item figcaption span {
+  display: block;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

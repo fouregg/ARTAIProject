@@ -255,7 +255,9 @@ def _error_from_response(response: httpx.Response) -> ProvodError:
         code = code or "INSUFFICIENT_BALANCE"
     elif "MODERATION" in normalized or "SAFETY" in normalized or "REJECT" in normalized:
         # Дословная формулировка из «4-Экранные тексты терминала»: причину не раскрываем.
-        message = "Запрос не может быть обработан. Попробуйте сформулировать его иначе."
+        message = (
+            "Возможно вы использовали запрещенные темы, попробуйте переформулировать запрос"
+        )
         code = code or "MODERATION_BLOCKED"
     elif "MODEL_PARAMETER_COMBINATION_INVALID" in normalized:
         message = "Модель не принимает такую комбинацию параметров изображения."

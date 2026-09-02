@@ -1,19 +1,20 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import select
+from sqlalchemy import exists, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db import get_session
 from app.api.dependencies import require_access_email
-from app.models import Generation, GalleryItem, User
+from app.models import DomeItem, Generation, GalleryItem, User
 from app.schemas import GalleryAddRequest, GalleryItemOut
 from app.services.cleanup import EXPIRED_DETAIL
 
 router = APIRouter(prefix="/api/gallery", tags=["gallery"])
 
 
-def _to_out(item: GalleryItem, generation: Generation) -> GalleryItemOut:
+def _to_out(item: GalleryItem, generation: Generation, on_canvas: bool = False) -> GalleryItemOut:
     return GalleryItemOut(
         id=item.id,
+        on_canvas=on_canvas,
         generation_id=generation.id,
         url=f"/api/images/{generation.id}/file",
         thumb_url=f"/api/images/{generation.id}/thumb",
@@ -47,7 +48,12 @@ async def add_to_gallery(
         )
     )
     if existing is not None:
-        # Повторное нажатие кнопки — не ошибка, просто возвращаем что уже есть.
+        # Картинка уже в галерее автоматически — нажатие кнопки делает её постоянной.
+        if existing.is_auto:
+            existing.is_auto = False
+            existing.title = payload.title or existing.title
+            await session.commit()
+            await session.refresh(existing)
         return _to_out(existing, generation)
 
     item = GalleryItem(generation_id=generation.id, user_id=user.id, title=payload.title)
@@ -65,15 +71,19 @@ async def list_gallery(
     session: AsyncSession = Depends(get_session),
 ) -> list[GalleryItemOut]:
     """Галерея личная: гость видит только то, что сохранил сам."""
+    on_canvas = exists().where(
+        DomeItem.generation_id == Generation.id,
+        DomeItem.is_visible.is_(True),
+    )
     rows = await session.execute(
-        select(GalleryItem, Generation)
+        select(GalleryItem, Generation, on_canvas)
         .join(Generation, GalleryItem.generation_id == Generation.id)
         .where(GalleryItem.user_id == user.id)
         .order_by(GalleryItem.created_at.desc())
         .limit(limit)
         .offset(offset)
     )
-    return [_to_out(item, generation) for item, generation in rows.all()]
+    return [_to_out(item, generation, shown) for item, generation, shown in rows.all()]
 
 
 @router.delete("/{item_id}", status_code=status.HTTP_204_NO_CONTENT)
