@@ -13,6 +13,13 @@ import ResultModal from "../components/ResultModal";
 import { useI18n } from "../i18n/LanguageContext";
 import { useReg } from "../i18n/registration";
 
+// Причины, по которым запрос не берут в работу: гостю нужен совет, а не сообщение об аварии.
+const SOFT_REJECTION_CODES = ["MODERATION_BLOCKED", "IMAGE_REJECTED"];
+
+function isSoftRejection(caught: unknown): boolean {
+  return caught instanceof ApiError && SOFT_REJECTION_CODES.includes(caught.code ?? "");
+}
+
 // Формат и качество больше не выбираются: квадрат и low для всех.
 // low заметно быстрее medium — на киоске очередь важнее детализации.
 const ASPECT_RATIO = "1:1";
@@ -29,7 +36,8 @@ export default function PromptPage() {
   const [regenerating, setRegenerating] = useState(false);
   const [generation, setGeneration] = useState<Generation | null>(null);
   const [error, setError] = useState<string | null>(null);
-  // Отказ модерации — не поломка, а подсказка: показываем его без приставки «Не получилось».
+  // Отказ в генерации — не поломка, а подсказка: показываем его без приставки «Не получилось».
+  // Так же и когда рисующая модель сама не взялась за сюжет (известный персонаж, бренд).
   const [rejected, setRejected] = useState(false);
   const [elapsed, setElapsed] = useState(0);
   const [authTab, setAuthTab] = useState<AuthTab | null>(null);
@@ -107,7 +115,7 @@ export default function PromptPage() {
     try {
       setGeneration(await runGeneration({ prompt: text, skipTranslation: false }));
     } catch (caught) {
-      setRejected(caught instanceof ApiError && caught.code === "MODERATION_BLOCKED");
+      setRejected(isSoftRejection(caught));
       setError(caught instanceof ApiError ? caught.message : String(caught));
     } finally {
       setBusy(false);
@@ -135,7 +143,7 @@ export default function PromptPage() {
         }),
       );
     } catch (caught) {
-      setRejected(caught instanceof ApiError && caught.code === "MODERATION_BLOCKED");
+      setRejected(isSoftRejection(caught));
       setError(caught instanceof ApiError ? caught.message : String(caught));
     } finally {
       setRegenerating(false);

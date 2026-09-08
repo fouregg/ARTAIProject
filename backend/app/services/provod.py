@@ -25,6 +25,10 @@ TRANSLATE_TIMEOUT = httpx.Timeout(30.0, connect=10.0)
 IMAGE_TIMEOUT = httpx.Timeout(180.0, connect=10.0)
 RETRY_STATUSES = {429, 500, 502, 503, 504}
 MAX_ATTEMPTS = 3
+# Отказ по содержанию запроса шлюз отдаёт под кодом 502, хотя сам жив. Повторять
+# такой запрос бессмысленно — ответ будет тот же, а гость лишнюю минуту смотрит на
+# спиннер. Коды здесь наши, из _error_from_response, а не сырые коды шлюза.
+NON_RETRYABLE_CODES = {"IMAGE_REJECTED", "MODERATION_BLOCKED"}
 
 _TRANSLATION_SYSTEM_PROMPT = (
     "You prepare prompts for a text-to-image model. "
@@ -77,7 +81,13 @@ class ProvodClient:
             else:
                 if response.status_code < 400:
                     return response.json()
-                if response.status_code in RETRY_STATUSES and attempt < MAX_ATTEMPTS:
+
+                error = _error_from_response(response)
+                repeatable = (
+                    response.status_code in RETRY_STATUSES
+                    and error.code not in NON_RETRYABLE_CODES
+                )
+                if repeatable and attempt < MAX_ATTEMPTS:
                     logger.warning(
                         "provod %s вернул %s, повтор (%s/%s)",
                         path,
@@ -86,7 +96,14 @@ class ProvodClient:
                         MAX_ATTEMPTS,
                     )
                 else:
-                    raise _error_from_response(response)
+                    logger.error(
+                        "provod %s: %s (%s / HTTP %s)",
+                        path,
+                        error.message,
+                        error.code,
+                        response.status_code,
+                    )
+                    raise error
 
             if attempt < MAX_ATTEMPTS:
                 await asyncio.sleep(2 ** (attempt - 1))
@@ -229,6 +246,7 @@ def _error_from_response(response: httpx.Response) -> ProvodError:
     status = response.status_code
     code: str | None = None
     detail = ""
+    message_field = ""
 
     try:
         body = response.json()
@@ -243,9 +261,12 @@ def _error_from_response(response: httpx.Response) -> ProvodError:
         elif isinstance(error, str):
             detail = error
         code = code or body.get("code")
-        detail = detail or body.get("message") or ""
+        # У шлюза бывает и короткое error: "Bad Gateway", и осмысленное message
+        # рядом с ним — в разбор берём оба, иначе причина теряется.
+        message_field = body.get("message") if isinstance(body.get("message"), str) else ""
+        detail = message_field or detail
 
-    normalized = f"{code or ''} {detail}".upper()
+    normalized = f"{code or ''} {detail} {message_field}".upper()
 
     if status in (401, 403) and "TOP_UP" not in normalized:
         message = "Ключ provod.ai отклонён. Проверьте PROVOD_API_KEY в .env."
@@ -259,15 +280,27 @@ def _error_from_response(response: httpx.Response) -> ProvodError:
             "Возможно вы использовали запрещенные темы, попробуйте переформулировать запрос"
         )
         code = code or "MODERATION_BLOCKED"
+    elif "IMAGE_UPSTREAM_INVALID_REQUEST" in normalized:
+        # Так шлюз оформляет отказ самой рисующей модели: чаще всего это узнаваемые
+        # персонажи, бренды и реальные люди. Гостю сообщаем по-человечески.
+        message = (
+            "Модель отказалась рисовать этот запрос. Так бывает с известными персонажами, "
+            "брендами и реальными людьми — попробуйте описать сцену своими словами."
+        )
+        code = "IMAGE_REJECTED"
     elif "MODEL_PARAMETER_COMBINATION_INVALID" in normalized:
         message = "Модель не принимает такую комбинацию параметров изображения."
         code = code or "MODEL_PARAMETER_COMBINATION_INVALID"
     elif status == 429:
         message = "Слишком много запросов к provod.ai. Подождите немного."
         code = code or "RATE_LIMITED"
+    elif status >= 500:
+        # Настоящий сбой шлюза. Английское «Bad Gateway» из тела ответа гостю
+        # ничего не объясняет, поэтому оно остаётся только в журнале.
+        message = "Сервис генерации сейчас не отвечает. Попробуйте ещё раз через минуту."
+        code = code or "UPSTREAM_ERROR"
     else:
         message = detail or f"Шлюз provod.ai вернул ошибку {status}."
         code = code or "UPSTREAM_ERROR"
 
-    logger.error("provod error %s: %s (%s)", status, detail or message, code)
     return ProvodError(message, code=code, status=status)
