@@ -359,8 +359,9 @@ textarea.field--prompt {
 
 /* --- фирменные знаки ------------------------------------------------------ */
 
-.brand__event {
-  height: 42px;
+/* Знак ПФКИ — широкий горизонтальный блок, поэтому высота меньше остальных. */
+.brand__grant {
+  height: 38px;
   width: auto;
   flex: none;
 }
@@ -392,6 +393,11 @@ textarea.field--prompt {
 
 .brandbar__mark--wide {
   height: 54px;
+}
+
+/* Знак МФМ — горизонтальный блок с мелкой подписью: при 76px она теряется. */
+.brandbar__mark--mfm {
+  height: 66px;
 }
 
 /* Знак выставки вертикальный: при общей высоте подписи под ним не читаются. */
@@ -433,8 +439,8 @@ textarea.field--prompt {
     justify-content: center;
   }
 
-  .brand__event {
-    height: 34px;
+  .brand__grant {
+    height: 30px;
   }
 
   .stage {
@@ -472,6 +478,10 @@ textarea.field--prompt {
 
   .brandbar__mark--wide {
     height: 32px;
+  }
+
+  .brandbar__mark--mfm {
+    height: 40px;
   }
 
   .brandbar__mark--tall {

@@ -6,7 +6,7 @@ import type { Generation, JobStage } from "../api/client";
 import { useAuth } from "../auth/AuthContext";
 import AuthModal from "../components/AuthModal";
 import type { AuthTab } from "../components/AuthModal";
-import { BrandFooter, EventLogo } from "../components/BrandMarks";
+import { BrandFooter, GrantMark } from "../components/BrandMarks";
 import CanvasPreview from "../components/CanvasPreview";
 import LanguageSelect from "../components/LanguageSelect";
 import ResultModal from "../components/ResultModal";
@@ -147,7 +147,7 @@ export default function PromptPage() {
   return (
     <div className="stage">
       <header className="topbar">
-        <EventLogo />
+        <GrantMark />
 
         <div className="topbar__actions">
           <LanguageSelect />

@@ -4,7 +4,7 @@ import { Link, Navigate } from "react-router-dom";
 import { ApiError, deleteGalleryItem, displayOnDome, fetchGallery } from "../api/client";
 import type { GalleryItem } from "../api/client";
 import { useAuth } from "../auth/AuthContext";
-import { BrandFooter, EventLogo } from "../components/BrandMarks";
+import { BrandFooter, GrantMark } from "../components/BrandMarks";
 import { useI18n } from "../i18n/LanguageContext";
 
 export default function GalleryPage() {
@@ -61,7 +61,7 @@ export default function GalleryPage() {
   return (
     <div className="page">
       <header className="page__header">
-        <EventLogo />
+        <GrantMark />
         <Link className="btn btn--ghost btn--small" to="/">
           {t.back}
         </Link>
