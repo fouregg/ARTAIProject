@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import type { CSSProperties } from "react";
 import { useSearchParams } from "react-router-dom";
 
 import { domeSocketUrl, fetchDomeItems } from "../api/client";
 import type { DomeItem } from "../api/client";
 import { useLegal } from "../api/legalCache";
-import { PAGE_SIZE, currentPage, splitIntoRows } from "../lib/collage";
+import { PAGE_SIZE, columnsFor, currentPage, splitIntoRows } from "../lib/collage";
 
 type ConnectionState = "connecting" | "online" | "offline" | "unauthorized";
 
@@ -168,6 +169,10 @@ export default function DomePage() {
     [items, page],
   );
 
+  // Экран в зале книжный, но страница открывается и на альбомных мониторах,
+  // поэтому сетка считается от реальных пропорций окна.
+  const columns = columnsFor(pageItems.length, viewport.width, viewport.height);
+
   const rows = useMemo(() => {
     const sizes = splitIntoRows(pageItems.length, viewport.width, viewport.height);
     const result: DomeItem[][] = [];
@@ -206,9 +211,14 @@ export default function DomePage() {
         </div>
       )}
 
-      <div className="dome__collage">
+      {/* --cols нужен неполному последнему ряду: его плитки держат ширину колонки
+          и встают по центру, вместо того чтобы растянуться на всю строку. */}
+      <div className="dome__collage" style={{ "--cols": columns } as CSSProperties}>
         {rows.map((row, index) => (
-          <div className="dome__row" key={`${page}-${index}`}>
+          <div
+            className={`dome__row${row.length < columns ? " dome__row--tail" : ""}`}
+            key={`${page}-${index}`}
+          >
             {row.map((item) => (
               <div className="dome__tile" key={item.id}>
                 <img src={item.thumb_url} alt="" />

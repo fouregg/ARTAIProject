@@ -151,6 +151,8 @@ class DomePreviewOut(BaseModel):
     page: int
     page_count: int
     total: int
+    # «9:16» — пропорции экрана в зале, чтобы миниатюра повторяла его раскладку.
+    aspect: str
 
 
 class AdminDomeItemOut(BaseModel):

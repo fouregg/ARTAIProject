@@ -7,7 +7,17 @@ import { splitIntoRows } from "../lib/collage";
 
 // Холст меняет страницу раз в минуту; опрашиваем чаще, чтобы миниатюра не отставала.
 const REFRESH_MS = 15000;
-const PREVIEW_RATIO = 16 / 9;
+// Запасные пропорции, если сервер почему-то не прислал свои.
+const FALLBACK_ASPECT = { width: 9, height: 16 };
+
+/** «9:16» -> {width: 9, height: 16}. Мусор в настройке не должен ломать экран ввода. */
+function parseAspect(raw: string | undefined) {
+  const [width, height] = (raw ?? "").split(":").map(Number);
+  if (!Number.isFinite(width) || !Number.isFinite(height) || width <= 0 || height <= 0) {
+    return FALLBACK_ASPECT;
+  }
+  return { width, height };
+}
 
 /** Мини-полотно: что прямо сейчас показывает цифровой холст в зале. */
 export default function CanvasPreview() {
@@ -34,10 +44,13 @@ export default function CanvasPreview() {
     };
   }, []);
 
+  const aspect = parseAspect(preview?.aspect);
+
   const rows = useMemo(() => {
     if (!preview) return [];
-    // Та же раскладка, что на самом холсте, только в пропорциях миниатюры.
-    const sizes = splitIntoRows(preview.items.length, PREVIEW_RATIO, 1);
+    // Та же раскладка, что на самом холсте, и в тех же пропорциях: миниатюра должна
+    // показывать ровно то, что видно на стене, а стена книжная.
+    const sizes = splitIntoRows(preview.items.length, aspect.width, aspect.height);
     const result: DomePreview["items"][] = [];
     let offset = 0;
     for (const size of sizes) {
@@ -45,12 +58,12 @@ export default function CanvasPreview() {
       offset += size;
     }
     return result;
-  }, [preview]);
+  }, [preview, aspect.width, aspect.height]);
 
   if (!preview || preview.items.length === 0) return null;
 
   return (
-    <section className="canvasview">
+    <section className={`canvasview${aspect.height > aspect.width ? " canvasview--portrait" : ""}`}>
       <header className="canvasview__header">
         <span>{t.canvasNow}</span>
         <span className="canvasview__page">
@@ -60,7 +73,10 @@ export default function CanvasPreview() {
         </span>
       </header>
 
-      <div className="canvasview__frame">
+      <div
+        className="canvasview__frame"
+        style={{ aspectRatio: `${aspect.width} / ${aspect.height}` }}
+      >
         {rows.map((row, index) => (
           <div className="canvasview__row" key={index}>
             {row.map((item) => (

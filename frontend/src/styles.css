@@ -323,11 +323,21 @@ textarea.field--prompt {
   font-variant-numeric: tabular-nums;
 }
 
+/*
+ * Книжная стена. Ширину миниатюре задавать нельзя — по такой пропорции она вышла
+ * бы выше самого экрана терминала и уехала под подвал. Поэтому ограничиваем высоту,
+ * ширину считает aspect-ratio, а подпись остаётся во всю ширину формы.
+ */
+.canvasview--portrait .canvasview__frame {
+  height: min(340px, 34vh);
+  width: auto;
+  align-self: center;
+}
+
 .canvasview__frame {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  aspect-ratio: 16 / 9;
   padding: 4px;
   background: #05070c;
   border: 1px solid var(--border);
@@ -688,20 +698,33 @@ textarea.field--prompt {
   text-align: center;
 }
 
+/*
+ * Маркировка и номер страницы поверх коллажа. Размер привязан к меньшей стороне
+ * экрана: на книжной панели 2160x3840 фиксированные 0.9rem с расстояния зала
+ * уже не прочитать. Плашка под текстом нужна там, где под ним оказалась светлая
+ * плитка — одной тени на таком фоне не хватает.
+ */
 .dome__disclosure {
   position: absolute;
-  bottom: 14px;
+  bottom: max(14px, 1.2vmin);
   inset-inline: 0;
   z-index: 5;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: center;
-  gap: 24px;
+  gap: max(24px, 2.4vmin);
   text-align: center;
-  color: rgba(255, 255, 255, 0.75);
-  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.92);
+  font-size: max(0.9rem, 1.4vmin);
   text-shadow: 0 2px 8px rgba(0, 0, 0, 0.9);
   pointer-events: none;
+}
+
+.dome__disclosure > span {
+  padding: 0.35em 0.9em;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.45);
 }
 
 /* --- форма --------------------------------------------------------------- */
@@ -1051,6 +1074,19 @@ textarea.field--prompt {
   min-height: 0;
 }
 
+/*
+ * Неполный последний ряд. Плитки держат ширину колонки и стоят по центру:
+ * иначе три оставшиеся картинки растянулись бы во всю ширину экрана и ряд
+ * выпал бы из сетки. Особенно заметно на книжном экране, где рядов много.
+ */
+.dome__row--tail {
+  justify-content: center;
+}
+
+.dome__row--tail .dome__tile {
+  flex: 0 0 calc((100% - (var(--cols) - 1) * 2px) / var(--cols));
+}
+
 .dome__tile {
   flex: 1 1 0;
   min-width: 0;
@@ -1074,14 +1110,14 @@ textarea.field--prompt {
 
 .dome__status {
   position: absolute;
-  top: 16px;
-  inset-inline-start: 16px;
+  top: max(16px, 1.2vmin);
+  inset-inline-start: max(16px, 1.2vmin);
   z-index: 5;
-  padding: 8px 14px;
+  padding: 0.5em 1em;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.55);
   color: #fff;
-  font-size: 0.85rem;
+  font-size: max(0.85rem, 1.15vmin);
 }
 
 .dome__status[data-state="unauthorized"] {
@@ -1095,5 +1131,5 @@ textarea.field--prompt {
   align-items: center;
   justify-content: center;
   color: #4a5162;
-  font-size: 1.1rem;
+  font-size: max(1.1rem, 1.6vmin);
 }

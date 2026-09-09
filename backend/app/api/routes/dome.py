@@ -126,6 +126,7 @@ async def dome_preview(session: AsyncSession = Depends(get_session)) -> DomePrev
         page=page + 1,
         page_count=page_count,
         total=total,
+        aspect=get_settings().canvas_aspect,
     )
 
 

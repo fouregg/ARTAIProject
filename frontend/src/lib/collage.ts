@@ -1,25 +1,55 @@
 /**
- * Раскладка коллажа: строками, а не жёсткой сеткой.
+ * Раскладка коллажа: ровная сетка, у которой неполным может быть только последний ряд.
  *
- * Сетка repeat(N, 1fr) оставляет чёрные дыры, когда число картинок не делится на
- * число колонок. Здесь строки заполняются целиком при любом количестве плиток,
- * а число строк подбирается под пропорции области, чтобы плитки не вытягивались.
+ * Число колонок подбирается под пропорции экрана, чтобы плитка была близка к квадрату:
+ * холст в зале книжный, но страница галереи и мини-полотно на терминале — альбомные,
+ * поэтому число колонок считается от реальных размеров области, а не задаётся числом.
  *
- * Общая для холста и для мини-полотна на терминале: миниатюра должна повторять
- * то, что человек видит на стене.
+ * Раньше остаток размазывался по всем рядам, и на книжном экране это давало заметный
+ * вертикальный разлом посередине: часть рядов по шесть плиток, часть по пять. Ровная
+ * сетка с центрированным хвостом читается как законченный коллаж.
+ *
+ * Общая для холста и для мини-полотна: миниатюра должна повторять то, что человек
+ * видит на стене.
  */
+
+/** Неровный хвост заметен глазом, поэтому делители count получают небольшую фору. */
+const RAGGED_PENALTY = 0.18;
+
+export function columnsFor(count: number, width: number, height: number): number {
+  if (count <= 0) return 1;
+
+  let best = 1;
+  let bestCost = Number.POSITIVE_INFINITY;
+
+  for (let columns = 1; columns <= count; columns += 1) {
+    const rows = Math.ceil(count / columns);
+    const tileWidth = Math.max(width, 1) / columns;
+    const tileHeight = Math.max(height, 1) / rows;
+    // Логарифм отношения сторон: 2:1 и 1:2 одинаково плохи.
+    const squareness = Math.abs(Math.log(tileWidth / tileHeight));
+    const cost = squareness + (count % columns === 0 ? 0 : RAGGED_PENALTY);
+
+    if (cost < bestCost) {
+      bestCost = cost;
+      best = columns;
+    }
+  }
+
+  return best;
+}
+
+/** Длины рядов сверху вниз: все по columns, последний — остаток. */
 export function splitIntoRows(count: number, width: number, height: number): number[] {
-  if (count === 0) return [];
+  if (count <= 0) return [];
 
-  const rows = Math.max(1, Math.round(Math.sqrt((count * height) / Math.max(width, 1))));
-  const base = Math.floor(count / rows);
-  let extra = count % rows;
+  const columns = columnsFor(count, width, height);
+  const full = Math.floor(count / columns);
+  const tail = count % columns;
 
-  return Array.from({ length: rows }, () => {
-    const size = base + (extra > 0 ? 1 : 0);
-    if (extra > 0) extra -= 1;
-    return size;
-  }).filter((size) => size > 0);
+  const rows = Array.from({ length: full }, () => columns);
+  if (tail > 0) rows.push(tail);
+  return rows;
 }
 
 /**

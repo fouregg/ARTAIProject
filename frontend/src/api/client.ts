@@ -133,6 +133,8 @@ export interface DomePreview {
   page: number;
   page_count: number;
   total: number;
+  /** Пропорции экрана в зале, «ширина:высота» — миниатюра повторяет его форму. */
+  aspect: string;
 }
 
 export class ApiError extends Error {
