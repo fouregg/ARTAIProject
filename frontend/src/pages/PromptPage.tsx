@@ -12,6 +12,7 @@ import LanguageSelect from "../components/LanguageSelect";
 import ResultModal from "../components/ResultModal";
 import { useI18n } from "../i18n/LanguageContext";
 import { useReg } from "../i18n/registration";
+import { holdIdle } from "../lib/idle";
 
 // Причины, по которым запрос не берут в работу: гостю нужен совет, а не сообщение об аварии.
 const SOFT_REJECTION_CODES = ["MODERATION_BLOCKED", "IMAGE_REJECTED"];
@@ -73,6 +74,9 @@ export default function PromptPage() {
     );
     return () => window.clearInterval(timer);
   }, [working]);
+
+  // Ожидание картинки — не бездействие: на эти полторы минуты придерживаем счётчик выхода.
+  useEffect(() => (working ? holdIdle() : undefined), [working]);
 
   async function runGeneration(params: {
     prompt: string;
@@ -268,11 +272,15 @@ export default function PromptPage() {
           canRegenerate={!exhausted}
           onRegenerate={handleRegenerate}
           onEditPrompt={() => {
-            // Текст запроса из поля не стирается, поэтому достаточно вернуть в него курсор.
+            // Единственный путь, на котором текст остаётся в поле: гость хочет его править.
             setGeneration(null);
             window.setTimeout(() => promptRef.current?.focus(), 0);
           }}
-          onClose={() => setGeneration(null)}
+          onClose={() => {
+            // Закрыли окно, не собираясь править запрос — киоск готов к следующему гостю.
+            setGeneration(null);
+            setPrompt("");
+          }}
         />
       )}
     </div>

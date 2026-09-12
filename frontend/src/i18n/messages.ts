@@ -52,6 +52,8 @@ export interface Messages {
   logout: string;
   takesUpTo: string;
   secondsSuffix: string;
+  idleTitle: string;
+  idleContinue: string;
 }
 
 export const MESSAGES: Record<UiLanguage, Messages> = {
@@ -92,6 +94,8 @@ export const MESSAGES: Record<UiLanguage, Messages> = {
     remaining: "Осталось генераций: {n}",
     exhausted: "Генерации по этой почте закончились",
     logout: "Выйти",
+    idleTitle: "Выход произойдёт через",
+    idleContinue: "Продолжить",
   },
   en: {
     title: "Image generator",
@@ -130,6 +134,8 @@ export const MESSAGES: Record<UiLanguage, Messages> = {
     remaining: "Generations left: {n}",
     exhausted: "This email has no generations left",
     logout: "Sign out",
+    idleTitle: "You will be signed out in",
+    idleContinue: "Continue",
   },
   zh: {
     title: "图像生成器",
@@ -168,6 +174,8 @@ export const MESSAGES: Record<UiLanguage, Messages> = {
     remaining: "剩余生成次数：{n}",
     exhausted: "此邮箱的生成次数已用完",
     logout: "退出",
+    idleTitle: "即将自动退出",
+    idleContinue: "继续",
   },
   fr: {
     title: "Générateur d'images",
@@ -206,6 +214,8 @@ export const MESSAGES: Record<UiLanguage, Messages> = {
     remaining: "Générations restantes : {n}",
     exhausted: "Cet e-mail n'a plus de générations",
     logout: "Se déconnecter",
+    idleTitle: "Déconnexion dans",
+    idleContinue: "Continuer",
   },
   es: {
     title: "Generador de imágenes",
@@ -244,6 +254,8 @@ export const MESSAGES: Record<UiLanguage, Messages> = {
     remaining: "Generaciones restantes: {n}",
     exhausted: "Este correo ya no tiene generaciones",
     logout: "Salir",
+    idleTitle: "La sesión se cerrará en",
+    idleContinue: "Continuar",
   },
   pt: {
     title: "Gerador de imagens",
@@ -282,6 +294,8 @@ export const MESSAGES: Record<UiLanguage, Messages> = {
     remaining: "Gerações restantes: {n}",
     exhausted: "Este e-mail já não tem gerações",
     logout: "Sair",
+    idleTitle: "A sessão terminará em",
+    idleContinue: "Continuar",
   },
   ar: {
     title: "مولّد الصور",
@@ -320,6 +334,8 @@ export const MESSAGES: Record<UiLanguage, Messages> = {
     remaining: "الجيل المتبقي: {n}",
     exhausted: "لم تعد هناك عمليات إنشاء لهذا البريد",
     logout: "خروج",
+    idleTitle: "سيتم تسجيل الخروج خلال",
+    idleContinue: "متابعة",
   },
 };
 
