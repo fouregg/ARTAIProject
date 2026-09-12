@@ -128,6 +128,21 @@ export interface AdminDomeItem {
   created_at: string;
 }
 
+export interface AdminCountryStat {
+  country: string;
+  count: number;
+}
+
+/** Регистрации за последние сутки: итог, страны и три возрастные группы. */
+export interface AdminStats {
+  since: string;
+  total: number;
+  by_country: AdminCountryStat[];
+  under_18: number;
+  from_18_to_35: number;
+  over_35: number;
+}
+
 export interface DomePreview {
   items: { id: number; thumb_url: string }[];
   page: number;
@@ -255,6 +270,10 @@ export function fetchDomeItems(token: string): Promise<DomeItem[]> {
 
 export function fetchAdminDome(token: string): Promise<AdminDomeItem[]> {
   return request(`/api/admin/dome?token=${encodeURIComponent(token)}`);
+}
+
+export function fetchAdminStats(token: string): Promise<AdminStats> {
+  return request(`/api/admin/stats?token=${encodeURIComponent(token)}`);
 }
 
 export function hideDomeItem(token: string, id: number): Promise<AdminDomeItem> {

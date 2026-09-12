@@ -170,6 +170,22 @@ class AdminDomeItemOut(BaseModel):
     created_at: datetime
 
 
+class AdminCountryStat(BaseModel):
+    country: str
+    count: int
+
+
+class AdminStatsOut(BaseModel):
+    """Регистрации за последние сутки: всего, по странам и по возрастным группам."""
+
+    since: datetime
+    total: int
+    by_country: list[AdminCountryStat]
+    under_18: int
+    from_18_to_35: int
+    over_35: int
+
+
 class HealthOut(BaseModel):
     status: Literal["ok", "degraded"]
     database: str

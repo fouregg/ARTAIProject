@@ -1,8 +1,15 @@
 import { useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 
-import { ApiError, clearDome, fetchAdminDome, hideDomeItem, restoreDomeItem } from "../api/client";
-import type { AdminDomeItem } from "../api/client";
+import {
+  ApiError,
+  clearDome,
+  fetchAdminDome,
+  fetchAdminStats,
+  hideDomeItem,
+  restoreDomeItem,
+} from "../api/client";
+import type { AdminDomeItem, AdminStats } from "../api/client";
 
 /**
  * Модерация цифрового холста: /admin?token=<ADMIN_TOKEN>.
@@ -17,6 +24,8 @@ export default function AdminPage() {
   const [items, setItems] = useState<AdminDomeItem[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<number | null>(null);
+  const [stats, setStats] = useState<AdminStats | null>(null);
+  const [statsOpen, setStatsOpen] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -31,6 +40,23 @@ export default function AdminPage() {
   useEffect(() => {
     if (token) void load();
   }, [token, load]);
+
+  // Цифры запрашиваем на каждое открытие: сутки — окно скользящее, кешировать нечего.
+  async function toggleStats() {
+    if (statsOpen) {
+      setStatsOpen(false);
+      return;
+    }
+
+    setStatsOpen(true);
+    setError(null);
+    try {
+      setStats(await fetchAdminStats(token));
+    } catch (caught) {
+      setError(caught instanceof ApiError ? caught.message : String(caught));
+      setStatsOpen(false);
+    }
+  }
 
   async function act(id: number, action: () => Promise<unknown>) {
     setBusyId(id);
@@ -79,6 +105,14 @@ export default function AdminPage() {
           </button>
           <button
             type="button"
+            className="btn btn--ghost btn--small"
+            onClick={() => void toggleStats()}
+            aria-expanded={statsOpen}
+          >
+            Статистика
+          </button>
+          <button
+            type="button"
             className="btn btn--small"
             onClick={handleClear}
             disabled={visible.length === 0}
@@ -89,6 +123,57 @@ export default function AdminPage() {
       </header>
 
       {error && <p className="error">{error}</p>}
+
+      {statsOpen && stats && (
+        <section className="stats">
+          <h2 className="stats__total">
+            Регистраций за сутки: <strong>{stats.total}</strong>
+          </h2>
+          <p className="stats__period">
+            С {new Date(stats.since).toLocaleString("ru")} по настоящий момент
+          </p>
+
+          {stats.total === 0 ? (
+            <p className="page__subtitle">За эти сутки никто не регистрировался</p>
+          ) : (
+            <div className="stats__grid">
+              <div className="stats__block">
+                <h3 className="stats__heading">По странам</h3>
+                <table className="stats__table">
+                  <tbody>
+                    {stats.by_country.map((row) => (
+                      <tr key={row.country}>
+                        <td>{row.country}</td>
+                        <td>{row.count}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="stats__block">
+                <h3 className="stats__heading">По возрасту</h3>
+                <table className="stats__table">
+                  <tbody>
+                    <tr>
+                      <td>До 18</td>
+                      <td>{stats.under_18}</td>
+                    </tr>
+                    <tr>
+                      <td>18–35</td>
+                      <td>{stats.from_18_to_35}</td>
+                    </tr>
+                    <tr>
+                      <td>35+</td>
+                      <td>{stats.over_35}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </section>
+      )}
 
       <p className="page__subtitle">
         На холсте {visible.length}, скрыто {hidden.length}

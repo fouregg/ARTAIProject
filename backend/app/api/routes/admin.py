@@ -6,6 +6,8 @@
 и сам факт показа, и то, что его прекратили.
 """
 
+from datetime import datetime, timezone
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -14,7 +16,8 @@ from app.api.dependencies import require_admin_token
 from app.api.routes.dome import to_out as dome_item_out
 from app.db import get_session
 from app.models import DomeItem, Generation
-from app.schemas import AdminDomeItemOut
+from app.schemas import AdminCountryStat, AdminDomeItemOut, AdminStatsOut
+from app.services import stats as stats_service
 from app.services.dome_hub import hub
 
 router = APIRouter(prefix="/api/admin", tags=["admin"])
@@ -47,6 +50,26 @@ async def _get_pair(session: AsyncSession, item_id: int) -> tuple[DomeItem, Gene
     if row is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Плитка не найдена.")
     return row[0], row[1]
+
+
+@router.get("/stats", response_model=AdminStatsOut)
+async def get_stats(
+    _: str = Depends(require_admin_token),
+    session: AsyncSession = Depends(get_session),
+) -> AdminStatsOut:
+    """Сколько учёток завели за сутки — с разбивкой по странам и возрасту."""
+    summary = await stats_service.collect(session, datetime.now(timezone.utc))
+    return AdminStatsOut(
+        since=summary.since,
+        total=summary.total,
+        by_country=[
+            AdminCountryStat(country=country, count=count)
+            for country, count in summary.by_country
+        ],
+        under_18=summary.under_18,
+        from_18_to_35=summary.from_18_to_35,
+        over_35=summary.over_35,
+    )
 
 
 @router.get("/dome", response_model=list[AdminDomeItemOut])

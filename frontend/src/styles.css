@@ -1025,6 +1025,62 @@ textarea.field--prompt {
   }
 }
 
+/* --- сводка регистраций в админке ---------------------------------------- */
+
+.stats {
+  margin-top: 18px;
+  padding: 16px 18px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.stats__total {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 500;
+}
+
+.stats__period {
+  margin: 2px 0 0;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.stats__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 18px;
+  margin-top: 14px;
+}
+
+.stats__heading {
+  margin: 0 0 6px;
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--muted);
+}
+
+.stats__table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.stats__table td {
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+/* Число прижато к правому краю и одной ширины — так столбец читается сверху вниз. */
+.stats__table td:last-child {
+  width: 4em;
+  text-align: end;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
 /* --- галерея ------------------------------------------------------------- */
 
 .gallery {
