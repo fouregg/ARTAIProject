@@ -209,7 +209,7 @@ https://<выданный-домен>/dome?token=<DOME_TOKEN>
    повлияет только на один из двух вызовов.
 
 Категории заданы в [`services/moderation.py`](backend/app/services/moderation.py):
-`adult`, `profanity`, `gore`, `war`, `racism`, `children`, `disaster`, `ua_svo`,
+`adult`, `profanity`, `gore`, `war`, `racism`, `disaster`, `ua_svo`,
 `scatology`, `substances`, `drugs`, `destitution`. Формулировки там — часть настройки: правя описание категории,
 вы меняете поведение модерации.
 
