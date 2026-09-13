@@ -213,9 +213,10 @@ export default function RegistrationForm({ initialEmail = "", hint, onDone }: Pr
         <span>{REG.representative}</span>
       </label>
 
-      <a className="legal__link" href={legal.policy_url} target="_blank" rel="noreferrer">
+      {/* Файл политики временно не открываем: название видно, но перейти по нему нельзя. */}
+      <span className="legal__link legal__link--disabled" aria-disabled="true">
         {REG.policy}
-      </a>
+      </span>
 
       <button type="submit" className="btn btn--primary btn--wide" disabled={!canSubmit}>
         {busy ? REG.submitting : REG.registerSubmit}
