@@ -5,7 +5,7 @@ import type { DomePreview } from "../api/client";
 import { useI18n } from "../i18n/LanguageContext";
 import { splitIntoRows } from "../lib/collage";
 
-// Холст меняет страницу раз в минуту; опрашиваем чаще, чтобы миниатюра не отставала.
+// Холст меняет страницу не чаще раза в минуту; опрашиваем чаще, чтобы миниатюра не отставала.
 const REFRESH_MS = 15000;
 // Запасные пропорции, если сервер почему-то не прислал свои.
 const FALLBACK_ASPECT = { width: 9, height: 16 };

@@ -27,11 +27,14 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["dome"])
 
-# Холст листает страницы по 50 штук раз в минуту. Обе стороны — экран и мини-полотно
-# на терминале — считают номер страницы от одних и тех же часов, иначе миниатюра
-# показывала бы не то, что сейчас висит на стене.
+# Холст листает страницы по 50 штук: каждая висит минуту, а последняя — пять.
+# На последней самые свежие работы, и гость, только что отправивший картинку,
+# должен успеть её найти. Обе стороны — экран и мини-полотно на терминале — считают
+# номер страницы от одних и тех же часов, иначе миниатюра показывала бы не то,
+# что сейчас висит на стене. Те же числа — в frontend/src/lib/collage.ts.
 PAGE_SIZE = 50
 PAGE_INTERVAL_SECONDS = 60
+LAST_PAGE_INTERVAL_SECONDS = 300
 
 
 def current_page(page_count: int, now: float | None = None) -> int:
@@ -39,7 +42,9 @@ def current_page(page_count: int, now: float | None = None) -> int:
     if page_count <= 1:
         return 0
     seconds = time.time() if now is None else now
-    return int(seconds // PAGE_INTERVAL_SECONDS) % page_count
+    cycle = (page_count - 1) * PAGE_INTERVAL_SECONDS + LAST_PAGE_INTERVAL_SECONDS
+    # Хвост цикла длиннее минуты целиком приходится на последнюю страницу.
+    return min(int((seconds % cycle) // PAGE_INTERVAL_SECONDS), page_count - 1)
 
 
 def require_dome_token(token: str = Query(default="")) -> str:

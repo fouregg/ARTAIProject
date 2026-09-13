@@ -57,11 +57,17 @@ export function splitIntoRows(count: number, width: number, height: number): num
  *
  * Экран в зале и миниатюра на терминале считают его одинаково, поэтому показывают
  * одну и ту же страницу без всякой синхронизации между собой.
+ *
+ * Каждая страница висит минуту, последняя — пять: на ней самые свежие работы.
+ * Те же числа — в backend/app/api/routes/dome.py.
  */
 export const PAGE_SIZE = 50;
 export const PAGE_INTERVAL_MS = 60000;
+export const LAST_PAGE_INTERVAL_MS = 300000;
 
 export function currentPage(pageCount: number, now: number = Date.now()): number {
   if (pageCount <= 1) return 0;
-  return Math.floor(now / PAGE_INTERVAL_MS) % pageCount;
+  const cycle = (pageCount - 1) * PAGE_INTERVAL_MS + LAST_PAGE_INTERVAL_MS;
+  // Хвост цикла длиннее минуты целиком приходится на последнюю страницу.
+  return Math.min(Math.floor((now % cycle) / PAGE_INTERVAL_MS), pageCount - 1);
 }
