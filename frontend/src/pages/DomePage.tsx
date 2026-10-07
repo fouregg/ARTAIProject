@@ -154,7 +154,19 @@ export default function DomePage() {
     };
   }, [token, connection]);
 
-  const pageCount = Math.max(1, Math.ceil(items.length / PAGE_SIZE));
+  const uniqueItems = useMemo(() => {
+    const images = new Set<string>();
+    const prompts = new Set<string>();
+    return [...items].sort((a, b) => a.position - b.position || a.id - b.id).filter((item) => {
+      const key = item.image_key || item.generation_id;
+      const prompt = item.prompt.toLowerCase().trim().replace(/\s+/g, " ");
+      if (images.has(key) || prompts.has(prompt)) return false;
+      images.add(key);
+      prompts.add(prompt);
+      return true;
+    });
+  }, [items]);
+  const pageCount = Math.max(1, Math.ceil(uniqueItems.length / PAGE_SIZE));
 
   // Номер страницы считается от часов, а не от таймера с момента загрузки: так экран
   // и мини-полотно на терминале показывают одно и то же, и перезапуск экрана не сбивает счёт.
@@ -165,8 +177,8 @@ export default function DomePage() {
   }, [pageCount]);
 
   const pageItems = useMemo(
-    () => items.slice(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE),
-    [items, page],
+    () => uniqueItems.slice(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE),
+    [uniqueItems, page],
   );
 
   // Экран в зале книжный, но страница открывается и на альбомных мониторах,

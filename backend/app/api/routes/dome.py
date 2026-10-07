@@ -57,6 +57,7 @@ def require_dome_token(token: str = Query(default="")) -> str:
 
 def to_out(item: DomeItem, generation: Generation) -> DomeItemOut:
     return DomeItemOut(
+        image_key=generation.image_sha256 or str(generation.id),
         id=item.id,
         generation_id=generation.id,
         url=f"/api/images/{generation.id}/file",
@@ -72,9 +73,26 @@ async def _load_items(session: AsyncSession) -> list[DomeItemOut]:
         select(DomeItem, Generation)
         .join(Generation, DomeItem.generation_id == Generation.id)
         .where(DomeItem.is_visible.is_(True))
-        .order_by(DomeItem.position.asc())
+        .order_by(DomeItem.position.asc(), DomeItem.id.asc())
     )
-    return [to_out(item, generation) for item, generation in rows.all()]
+    # Old installations may contain duplicate files under different generation IDs.
+    seen_images: set[str] = set()
+    seen_prompts: set[str] = set()
+    result = []
+    for item, generation in rows.all():
+        out = to_out(item, generation)
+        prompt_key = " ".join(out.prompt.casefold().split())
+        if out.image_key in seen_images or prompt_key in seen_prompts:
+            continue
+        seen_images.add(out.image_key)
+        seen_prompts.add(prompt_key)
+        result.append(out)
+    return result
+
+
+async def broadcast_snapshot(session: AsyncSession) -> None:
+    items = await _load_items(session)
+    await hub.broadcast({"type": "snapshot", "items": [item.model_dump(mode="json") for item in items]})
 
 
 @router.post("/api/dome/display", response_model=DomeItemOut, status_code=status.HTTP_201_CREATED)
@@ -83,11 +101,21 @@ async def display_on_dome(
     _: User = Depends(require_access_email),
     session: AsyncSession = Depends(get_session),
 ) -> DomeItemOut:
-    generation = await session.get(Generation, payload.generation_id)
+    generation = await session.scalar(
+        select(Generation).where(Generation.id == payload.generation_id).with_for_update()
+    )
     if generation is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Изображение не найдено.")
     if generation.status != "done" or not generation.file_path:
         raise HTTPException(status.HTTP_410_GONE, detail=EXPIRED_DETAIL)
+
+    existing = await session.scalar(
+        select(DomeItem).where(
+            DomeItem.generation_id == generation.id, DomeItem.is_visible.is_(True)
+        )
+    )
+    if existing is not None:
+        return to_out(existing, generation)
 
     max_position = await session.scalar(select(func.max(DomeItem.position)))
     next_position = (max_position or 0) + 1
@@ -97,7 +125,7 @@ async def display_on_dome(
     await session.refresh(item)
 
     out = to_out(item, generation)
-    await hub.broadcast({"type": "image_added", "item": out.model_dump(mode="json")})
+    await broadcast_snapshot(session)
     return out
 
 
@@ -108,25 +136,16 @@ async def dome_preview(session: AsyncSession = Depends(get_session)) -> DomePrev
     Без токена: содержимое холста и так висит на стене у всех на виду. Отдаём только
     картинки текущей страницы, без текстов запросов и без полного списка на тысячи строк.
     """
-    total = await session.scalar(
-        select(func.count(DomeItem.id)).where(DomeItem.is_visible.is_(True))
-    ) or 0
+    items = await _load_items(session)
+    total = len(items)
     page_count = max(1, math.ceil(total / PAGE_SIZE))
     page = current_page(page_count)
-
-    rows = await session.execute(
-        select(DomeItem.id, Generation.id)
-        .join(Generation, DomeItem.generation_id == Generation.id)
-        .where(DomeItem.is_visible.is_(True))
-        .order_by(DomeItem.position.asc())
-        .offset(page * PAGE_SIZE)
-        .limit(PAGE_SIZE)
-    )
+    page_items = items[page * PAGE_SIZE:(page + 1) * PAGE_SIZE]
 
     return DomePreviewOut(
         items=[
-            DomePreviewItemOut(id=item_id, thumb_url=f"/api/images/{generation_id}/thumb")
-            for item_id, generation_id in rows.all()
+            DomePreviewItemOut(id=item.id, thumb_url=item.thumb_url)
+            for item in page_items
         ],
         page=page + 1,
         page_count=page_count,

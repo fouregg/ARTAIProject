@@ -130,6 +130,7 @@ class DomeDisplayRequest(BaseModel):
 
 
 class DomeItemOut(BaseModel):
+    image_key: str
     id: int
     generation_id: uuid.UUID
     url: str

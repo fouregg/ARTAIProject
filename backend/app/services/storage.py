@@ -1,5 +1,6 @@
 """Файлы изображений лежат на диске, в БД хранится только относительный путь."""
 
+import hashlib
 import io
 import logging
 import uuid
@@ -85,3 +86,11 @@ def delete_image(relative_path: str) -> None:
     if path is not None:
         _thumbnail_path(path).unlink(missing_ok=True)
         path.unlink(missing_ok=True)
+
+
+def image_fingerprint(data: bytes) -> str:
+    """Hash decoded pixels: encoding and metadata cannot disguise an identical image."""
+    with Image.open(io.BytesIO(data)) as source:
+        image = source.convert("RGB")
+        header = f"{image.width}x{image.height}:RGB:".encode()
+        return hashlib.sha256(header + image.tobytes()).hexdigest()

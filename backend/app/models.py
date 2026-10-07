@@ -7,6 +7,8 @@ from sqlalchemy import (
     DateTime,
     ForeignKey,
     Integer,
+    Index,
+    text,
     String,
     Text,
     Uuid,
@@ -70,6 +72,7 @@ class Generation(Base):
     moderation_categories: Mapped[str | None] = mapped_column(String(255), nullable=True)
 
     file_path: Mapped[str | None] = mapped_column(String(512), nullable=True)
+    image_sha256: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
     status: Mapped[str] = mapped_column(String(16), nullable=False, default="pending", index=True)
     error: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = _now_column()
@@ -100,6 +103,10 @@ class DomeItem(Base):
     """Плитки коллажа на купольном экране. Купол восстанавливает мозаику отсюда."""
 
     __tablename__ = "dome_items"
+    __table_args__ = (
+        Index("uq_dome_visible_generation", "generation_id", unique=True,
+              postgresql_where=text("is_visible")),
+    )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     generation_id: Mapped[uuid.UUID] = mapped_column(
