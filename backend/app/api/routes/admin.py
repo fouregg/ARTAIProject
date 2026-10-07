@@ -13,7 +13,7 @@ from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.dependencies import require_admin_token
-from app.api.routes.dome import to_out as dome_item_out
+from app.api.routes.dome import broadcast_snapshot
 from app.db import get_session
 from app.models import DomeItem, Generation
 from app.schemas import AdminCountryStat, AdminDomeItemOut, AdminStatsOut
@@ -98,7 +98,7 @@ async def hide_dome_item(
         item.is_visible = False
         await session.commit()
         await session.refresh(item)
-        await hub.broadcast({"type": "image_removed", "id": item.id})
+        await broadcast_snapshot(session)
 
     return _to_out(item, generation)
 
@@ -113,11 +113,20 @@ async def restore_dome_item(
     item, generation = await _get_pair(session, item_id)
 
     if not item.is_visible:
+        await session.scalar(
+            select(Generation).where(Generation.id == generation.id).with_for_update()
+        )
+        existing = await session.scalar(
+            select(DomeItem).where(
+                DomeItem.generation_id == generation.id, DomeItem.is_visible.is_(True)
+            )
+        )
+        if existing is not None:
+            raise HTTPException(status.HTTP_409_CONFLICT, detail="Изображение уже на холсте.")
         item.is_visible = True
         await session.commit()
         await session.refresh(item)
-        out = dome_item_out(item, generation)
-        await hub.broadcast({"type": "image_added", "item": out.model_dump(mode="json")})
+        await broadcast_snapshot(session)
 
     return _to_out(item, generation)
 

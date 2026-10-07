@@ -115,6 +115,7 @@ async def run_generation_job(
                 output_format="png",
             )
 
+            generation.image_sha256 = storage.image_fingerprint(image_bytes)
             generation.file_path = storage.save_image(image_bytes, generation_id, "png")
             generation.status = "done"
 
