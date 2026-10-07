@@ -54,6 +54,7 @@ export interface GalleryItem {
 }
 
 export interface DomeItem {
+  page_index: number;
   image_key: string;
   id: number;
   generation_id: string;

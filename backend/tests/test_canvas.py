@@ -91,5 +91,40 @@ class CanvasDatabaseTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual([item.id for item in preview.items], [item.id for item in snapshot])
 
 
+class SubjectPaginationTests(unittest.TestCase):
+    def test_repeated_subject_variants_get_separate_pages_without_losing_images(self):
+        from app.schemas import DomeItemOut
+        from app.services.canvas import paginate, subject_key
+        prompts = manifest()["prompts"]
+        # Three subjects in five visual variants: requires five pages, each with three images.
+        subset = [prompts[variant * 100 + subject] for variant in range(5) for subject in range(3)]
+        items = [DomeItemOut(id=index, generation_id=uuid.uuid4(), image_key=str(index),
+                             url="/image", thumb_url="/thumb", prompt=prompt, position=index,
+                             created_at=datetime.now(timezone.utc)) for index, prompt in enumerate(subset)]
+        output = paginate(items, 50)
+        self.assertEqual({item.id for item in output}, {item.id for item in items})
+        self.assertEqual(max(item.page_index for item in output), 4)
+        for page in range(5):
+            group = [item for item in output if item.page_index == page]
+            self.assertEqual(len(group), 3)
+            self.assertEqual(len({subject_key(item.prompt) for item in group}), 3)
+        self.assertEqual([item.id for item in output], [item.id for item in paginate(items, 50)])
+
+    def test_full_manifest_page_capacity_and_no_subject_repetition(self):
+        from app.schemas import DomeItemOut
+        from app.services.canvas import paginate, subject_key
+        items = [DomeItemOut(id=index, generation_id=uuid.uuid4(), image_key=str(index),
+                             url="/image", thumb_url="/thumb", prompt=prompt, position=index,
+                             created_at=datetime.now(timezone.utc))
+                 for index, prompt in enumerate(manifest()["prompts"])]
+        output = paginate(items, 50)
+        self.assertEqual(len(output), 500)
+        self.assertEqual(max(item.page_index for item in output), 9)
+        for page in range(10):
+            group = [item for item in output if item.page_index == page]
+            self.assertEqual(len(group), 50)
+            self.assertEqual(len({subject_key(item.prompt) for item in group}), 50)
+
+
 if __name__ == "__main__":
     unittest.main()

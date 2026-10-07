@@ -5,7 +5,7 @@ import { useSearchParams } from "react-router-dom";
 import { domeSocketUrl, fetchDomeItems } from "../api/client";
 import type { DomeItem } from "../api/client";
 import { useLegal } from "../api/legalCache";
-import { PAGE_SIZE, columnsFor, currentPage, splitIntoRows } from "../lib/collage";
+import { columnsFor, currentPage, splitIntoRows } from "../lib/collage";
 
 type ConnectionState = "connecting" | "online" | "offline" | "unauthorized";
 
@@ -15,7 +15,8 @@ const POLL_INTERVAL_MS = 10000;
 
 // К концу фестиваля изображений будут тысячи. Показывать их одним полотном нельзя:
 // плитка выродится в точку, а браузер задохнётся от количества картинок. Поэтому
-// холст листает страницы по 50 штук: минута на страницу, пять — на последнюю (см. lib/collage).
+// Сервер распределяет до 50 работ на страницу без повторения сюжетов.
+// Минута на страницу, пять — на последнюю (см. lib/collage).
 
 /**
  * Экран купола. Открывается на отдельном устройстве в киоск-режиме:
@@ -166,7 +167,7 @@ export default function DomePage() {
       return true;
     });
   }, [items]);
-  const pageCount = Math.max(1, Math.ceil(uniqueItems.length / PAGE_SIZE));
+  const pageCount = Math.max(1, ...uniqueItems.map((item) => item.page_index + 1));
 
   // Номер страницы считается от часов, а не от таймера с момента загрузки: так экран
   // и мини-полотно на терминале показывают одно и то же, и перезапуск экрана не сбивает счёт.
@@ -177,7 +178,7 @@ export default function DomePage() {
   }, [pageCount]);
 
   const pageItems = useMemo(
-    () => uniqueItems.slice(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE),
+    () => uniqueItems.filter((item) => item.page_index === page),
     [uniqueItems, page],
   );
 

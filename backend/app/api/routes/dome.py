@@ -1,5 +1,4 @@
 import logging
-import math
 import secrets
 import time
 
@@ -21,6 +20,7 @@ from app.api.dependencies import require_access_email
 from app.models import DomeItem, Generation, User
 from app.schemas import DomeDisplayRequest, DomeItemOut, DomePreviewItemOut, DomePreviewOut
 from app.services.cleanup import EXPIRED_DETAIL
+from app.services.canvas import paginate
 from app.services.dome_hub import hub
 
 logger = logging.getLogger(__name__)
@@ -87,7 +87,7 @@ async def _load_items(session: AsyncSession) -> list[DomeItemOut]:
         seen_images.add(out.image_key)
         seen_prompts.add(prompt_key)
         result.append(out)
-    return result
+    return paginate(result, PAGE_SIZE)
 
 
 async def broadcast_snapshot(session: AsyncSession) -> None:
@@ -138,9 +138,9 @@ async def dome_preview(session: AsyncSession = Depends(get_session)) -> DomePrev
     """
     items = await _load_items(session)
     total = len(items)
-    page_count = max(1, math.ceil(total / PAGE_SIZE))
+    page_count = max((item.page_index + 1 for item in items), default=1)
     page = current_page(page_count)
-    page_items = items[page * PAGE_SIZE:(page + 1) * PAGE_SIZE]
+    page_items = [item for item in items if item.page_index == page]
 
     return DomePreviewOut(
         items=[
